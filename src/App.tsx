@@ -60,8 +60,8 @@ function App() {
   }, [runDither, options, mode, blockSize]);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
-      <header className="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col">
+      <header className="border-b border-gray-200 px-6 py-4 flex justify-between items-center shrink-0">
         <span className="text-lg font-medium">Diamond Art</span>
         <nav className="flex gap-8 text-sm">
           <a href="#home" className="hover:underline">
@@ -76,9 +76,9 @@ function App() {
         </nav>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
+      <main className="w-full py-12 flex flex-col flex-1">
         {error && (
-          <Alert severity="error" onClose={clearError} sx={{ mb: 2 }}>
+          <Alert severity="error" onClose={clearError} sx={{ mb: 2, mx: 2 }}>
             {error}
           </Alert>
         )}
@@ -86,12 +86,22 @@ function App() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '320px 1fr' },
-            gap: 6,
-            alignItems: 'start',
+            gridTemplateColumns: { xs: '1fr', md: '300px 1fr' },
+            width: '100%',
+            minHeight: 'calc(100vh - 120px)',
+            alignItems: 'stretch',
           }}
         >
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              px: 3,
+              py: 2,
+              borderRight: { md: '1px solid rgba(0,0,0,0.08)' },
+            }}
+          >
             <Typography variant="h6" fontWeight={600}>
               Upload &amp; options
             </Typography>
@@ -112,7 +122,16 @@ function App() {
             <DownloadButton ditheredCanvas={ditheredCanvas} />
           </Box>
 
-          <Box>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              minWidth: 0,
+              px: 2,
+              py: 2,
+            }}
+          >
             <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
               Preview
             </Typography>

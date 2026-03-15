@@ -24,7 +24,7 @@ export function PreviewPanel({
   const displayUrl = viewOriginal ? sourceUrl : (ditheredUrl ?? sourceUrl);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minHeight: 0 }}>
       {isDithering && (
         <Typography variant="body2" color="text.secondary">
           Dithering…
@@ -47,8 +47,9 @@ export function PreviewPanel({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: 280,
-          p: 2,
+          flex: 1,
+          minHeight: '70vh',
+          p: 3,
         }}
       >
         {displayUrl ? (
@@ -58,7 +59,7 @@ export function PreviewPanel({
             style={{
               maxWidth: '100%',
               height: 'auto',
-              maxHeight: '70vh',
+              maxHeight: '85vh',
               objectFit: 'contain',
             }}
             width={width}
