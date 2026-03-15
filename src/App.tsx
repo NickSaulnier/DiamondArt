@@ -76,7 +76,7 @@ function App() {
         </nav>
       </header>
 
-      <main className="w-full py-12 flex flex-col flex-1">
+      <main className="w-full pt-6 pb-12 flex flex-col flex-1">
         {error && (
           <Alert severity="error" onClose={clearError} sx={{ mb: 2, mx: 2 }}>
             {error}
