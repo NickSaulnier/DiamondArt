@@ -29,7 +29,6 @@ interface DitherControlsProps {
   onOptionsChange: (options: RgbQuantOptions) => void;
   onModeChange: (mode: DitherMode) => void;
   onBlockSizeChange: (value: number) => void;
-  onAnalyze: () => void;
   onDither: () => void;
   hasImage: boolean;
   isAnalyzing: boolean;
@@ -43,10 +42,8 @@ export function DitherControls({
   onOptionsChange,
   onModeChange,
   onBlockSizeChange,
-  onAnalyze,
   onDither,
   hasImage,
-  isAnalyzing,
   isDithering,
 }: DitherControlsProps) {
   return (
@@ -129,18 +126,10 @@ export function DitherControls({
         <Button
           variant="outlined"
           size="small"
-          onClick={onAnalyze}
-          disabled={!hasImage || isAnalyzing}
-        >
-          {isAnalyzing ? 'Analyzing…' : 'Analyze palette'}
-        </Button>
-        <Button
-          variant="outlined"
-          size="small"
           onClick={onDither}
           disabled={!hasImage || isDithering}
         >
-          {isDithering ? 'Dithering…' : 'Dither'}
+          {isDithering ? 'Dithering…' : 'Create Pattern'}
         </Button>
       </Box>
     </Box>

@@ -43,7 +43,6 @@ function App() {
     isAnalyzing,
     isDithering,
     setSourceImage,
-    analyzePalette,
     runDither,
     clearError,
     setError,
@@ -55,10 +54,6 @@ function App() {
     },
     [setSourceImage]
   );
-
-  const handleAnalyze = useCallback(() => {
-    analyzePalette(options);
-  }, [analyzePalette, options]);
 
   const handleDither = useCallback(() => {
     runDither(options, mode, blockSize);
@@ -108,7 +103,6 @@ function App() {
               onOptionsChange={setOptions}
               onModeChange={setMode}
               onBlockSizeChange={setBlockSize}
-              onAnalyze={handleAnalyze}
               onDither={handleDither}
               hasImage={!!sourceImage}
               isAnalyzing={isAnalyzing}
