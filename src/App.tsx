@@ -60,7 +60,7 @@ function App() {
   }, [runDither, options, mode, blockSize]);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col">
+    <div className="h-screen bg-white text-gray-900 flex flex-col overflow-hidden">
       <header className="border-b border-gray-200 px-6 py-4 flex justify-between items-center shrink-0">
         <span className="text-lg font-medium">Diamond Art</span>
         <nav className="flex gap-8 text-sm">
@@ -76,7 +76,7 @@ function App() {
         </nav>
       </header>
 
-      <main className="w-full pt-6 pb-12 flex flex-col flex-1">
+      <main className="w-full flex-1 min-h-0 flex flex-col overflow-hidden pt-4 pb-4">
         {error && (
           <Alert severity="error" onClose={clearError} sx={{ mb: 2, mx: 2 }}>
             {error}
@@ -86,10 +86,10 @@ function App() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '300px 1fr' },
+            gridTemplateColumns: { xs: '1fr', md: '280px 1fr' },
             width: '100%',
-            height: { md: 'calc(100vh - 80px)' },
-            minHeight: { xs: 'calc(100vh - 120px)' },
+            height: '100%',
+            minHeight: 0,
             alignItems: 'stretch',
           }}
         >
@@ -101,12 +101,13 @@ function App() {
               px: 3,
               py: 2,
               borderRight: { md: '1px solid rgba(0,0,0,0.08)' },
-              width: { md: 300 },
-              maxWidth: { md: 300 },
-              height: { md: 'calc(100vh - 80px)' },
-              maxHeight: { md: 'calc(100vh - 80px)' },
+              width: { md: 280 },
+              maxWidth: { md: 280 },
+              height: '100%',
+              maxHeight: '100%',
               overflowY: 'auto',
               flexShrink: 0,
+              minHeight: 0,
             }}
           >
             <Typography variant="h6" fontWeight={600}>
@@ -135,8 +136,8 @@ function App() {
               flexDirection: 'column',
               flex: 1,
               minWidth: 0,
-              height: { md: 'calc(100vh - 80px)' },
-              maxHeight: { md: 'calc(100vh - 80px)' },
+              minHeight: 0,
+              height: '100%',
               overflow: 'hidden',
               px: 2,
               py: 2,
