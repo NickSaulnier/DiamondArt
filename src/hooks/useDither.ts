@@ -79,7 +79,8 @@ export function useDither() {
 
   const runDither = useCallback(
     (options: RgbQuantOptions, mode: DitherMode, blockSize: number, maxWidth?: number) => {
-      const { sourceImage, width: naturalWidth, height: naturalHeight } = state;
+      const { sourceImage, width: naturalWidth, height: naturalHeight, palette: currentPalette } =
+        state;
       if (!sourceImage) {
         setState((prev) => ({ ...prev, error: 'No image loaded' }));
         return;
@@ -89,41 +90,44 @@ export function useDither() {
         URL.revokeObjectURL(revokeRef.current);
         revokeRef.current = null;
       }
-      try {
-        let w = naturalWidth;
-        let h = naturalHeight;
-        if (maxWidth != null && maxWidth > 0 && naturalWidth > maxWidth) {
-          w = maxWidth;
-          h = Math.round((naturalHeight / naturalWidth) * maxWidth);
+      // Defer heavy work so the loading overlay can paint first
+      setTimeout(() => {
+        try {
+          let w = naturalWidth;
+          let h = naturalHeight;
+          if (maxWidth != null && maxWidth > 0 && naturalWidth > maxWidth) {
+            w = maxWidth;
+            h = Math.round((naturalHeight / naturalWidth) * maxWidth);
+          }
+          const palette =
+            currentPalette.length > 0 ? currentPalette : buildPalette(sourceImage, options);
+          const { canvas, palette: outPalette } = dither(
+            mode,
+            sourceImage,
+            options,
+            w,
+            h,
+            blockSize,
+            palette
+          );
+          const url = canvas.toDataURL('image/png');
+          setState((prev) => ({
+            ...prev,
+            ditheredCanvas: canvas,
+            ditheredUrl: url,
+            palette: outPalette,
+            width: w,
+            height: h,
+            isDithering: false,
+          }));
+        } catch (err) {
+          setState((prev) => ({
+            ...prev,
+            isDithering: false,
+            error: err instanceof Error ? err.message : 'Dithering failed',
+          }));
         }
-        const palette =
-          state.palette.length > 0 ? state.palette : buildPalette(sourceImage, options);
-        const { canvas, palette: outPalette } = dither(
-          mode,
-          sourceImage,
-          options,
-          w,
-          h,
-          blockSize,
-          palette
-        );
-        const url = canvas.toDataURL('image/png');
-        setState((prev) => ({
-          ...prev,
-          ditheredCanvas: canvas,
-          ditheredUrl: url,
-          palette: outPalette,
-          width: w,
-          height: h,
-          isDithering: false,
-        }));
-      } catch (err) {
-        setState((prev) => ({
-          ...prev,
-          isDithering: false,
-          error: err instanceof Error ? err.message : 'Dithering failed',
-        }));
-      }
+      }, 0);
     },
     [state]
   );

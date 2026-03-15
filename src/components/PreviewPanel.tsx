@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { DitheringOverlay } from './DitheringOverlay';
 
 interface PreviewPanelProps {
   sourceUrl: string | null;
@@ -25,11 +26,6 @@ export function PreviewPanel({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minHeight: 0 }}>
-      {isDithering && (
-        <Typography variant="body2" color="text.secondary">
-          Dithering…
-        </Typography>
-      )}
       {showDithered && !isDithering && (
         <button
           type="button"
@@ -42,6 +38,7 @@ export function PreviewPanel({
       )}
       <Box
         sx={{
+          position: 'relative',
           border: '1px solid rgba(0,0,0,0.08)',
           backgroundColor: '#fafafa',
           display: 'flex',
@@ -52,6 +49,7 @@ export function PreviewPanel({
           p: 3,
         }}
       >
+        <DitheringOverlay visible={isDithering} />
         {displayUrl ? (
           <img
             src={displayUrl}

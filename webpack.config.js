@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = (_, { mode }) => ({
   entry: './src/index.tsx',
@@ -30,6 +31,9 @@ module.exports = (_, { mode }) => ({
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',
+    }),
+    new CopyPlugin({
+      patterns: [{ from: 'public/animations', to: 'animations' }],
     }),
   ],
   devServer: {
