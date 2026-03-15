@@ -1,4 +1,5 @@
 import RgbQuant from 'rgbquant';
+import { getClosestColor, BAYER_THRESHOLD_MAP } from './ditherUtils';
 
 export type DitherKernel =
   | 'FloydSteinberg'
@@ -107,25 +108,7 @@ export function ditherWithRgbQuant(
   return { canvas, palette };
 }
 
-/**
- * Get closest palette color by Euclidean distance (for Bayer dither).
- */
-export function getClosestColor(
-  colors: Array<[number, number, number]>,
-  [r2, g2, b2]: [number, number, number]
-): [number, number, number] {
-  let minDist = Infinity;
-  let closest = colors[0];
-  for (let i = 0; i < colors.length; i++) {
-    const [r1, g1, b1] = colors[i];
-    const dist = (r2 - r1) ** 2 + (g2 - g1) ** 2 + (b2 - b1) ** 2;
-    if (dist < minDist) {
-      minDist = dist;
-      closest = colors[i];
-    }
-  }
-  return closest;
-}
+export { getClosestColor } from './ditherUtils';
 
 /**
  * Downscale then upscale with imageSmoothing disabled for blocky "bead" effect.
@@ -157,13 +140,6 @@ export function addPixelation(
   ctxAny.webkitImageSmoothingEnabled = false;
   ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, width, height);
 }
-
-const BAYER_THRESHOLD_MAP: number[][] = [
-  [15, 135, 45, 165],
-  [195, 75, 225, 105],
-  [60, 180, 30, 150],
-  [240, 120, 210, 90],
-];
 
 /**
  * Apply Bayer matrix dither to imageData in-place, then optionally pixelate.

@@ -1,11 +1,13 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   buildPalette,
   dither,
+  addPixelation,
   type RgbQuantOptions,
   type DitherMode,
   type RGBTriplet,
 } from '../lib/dithering';
+import type { WorkerRgbQuantOptions, DitherPayload, DitherResult } from '../dither.worker';
 
 export interface UseDitherState {
   sourceImage: HTMLImageElement | null;
@@ -33,9 +35,29 @@ const defaultState: UseDitherState = {
   isDithering: false,
 };
 
+function toWorkerOptions(opts: RgbQuantOptions): WorkerRgbQuantOptions {
+  return {
+    colors: opts.colors,
+    method: opts.method,
+    boxSize: opts.boxSize,
+    boxPxls: opts.boxPxls,
+    initColors: opts.initColors,
+    minHueCols: opts.minHueCols,
+    dithKern: opts.dithKern != null ? opts.dithKern : null,
+    dithDelta: opts.dithDelta,
+    dithSerp: opts.dithSerp,
+    palette: opts.palette,
+    useCache: opts.useCache,
+    cacheFreq: opts.cacheFreq,
+    colorDist: opts.colorDist,
+  };
+}
+
 export function useDither() {
   const [state, setState] = useState<UseDitherState>(defaultState);
   const revokeRef = useRef<string | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const runDitherAbortedRef = useRef<boolean>(false);
 
   const setSourceImage = useCallback((image: HTMLImageElement | null, objectUrl: string | null) => {
     if (revokeRef.current) {
@@ -86,19 +108,58 @@ export function useDither() {
         return;
       }
       setState((prev) => ({ ...prev, isDithering: true, error: null }));
+      runDitherAbortedRef.current = false;
       if (revokeRef.current) {
         URL.revokeObjectURL(revokeRef.current);
         revokeRef.current = null;
       }
-      // Defer heavy work so the loading overlay can paint first
-      setTimeout(() => {
+
+      let w = naturalWidth;
+      let h = naturalHeight;
+      if (maxWidth != null && maxWidth > 0 && naturalWidth > maxWidth) {
+        w = maxWidth;
+        h = Math.round((naturalHeight / naturalWidth) * maxWidth);
+      }
+
+      const applyWorkerResult = (payload: DitherResult) => {
+        if (runDitherAbortedRef.current) return;
         try {
-          let w = naturalWidth;
-          let h = naturalHeight;
-          if (maxWidth != null && maxWidth > 0 && naturalWidth > maxWidth) {
-            w = maxWidth;
-            h = Math.round((naturalHeight / naturalWidth) * maxWidth);
+          const canvas = document.createElement('canvas');
+          canvas.width = payload.width;
+          canvas.height = payload.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('Could not get canvas 2d context');
+          const imageData = new ImageData(
+            new Uint8ClampedArray(payload.resultBuffer),
+            payload.width,
+            payload.height
+          );
+          ctx.putImageData(imageData, 0, 0);
+          if (payload.blockSize > 1) {
+            addPixelation(ctx, canvas, payload.width, payload.height, payload.blockSize);
           }
+          const url = canvas.toDataURL('image/png');
+          setState((prev) => ({
+            ...prev,
+            ditheredCanvas: canvas,
+            ditheredUrl: url,
+            palette: payload.palette,
+            width: payload.width,
+            height: payload.height,
+            isDithering: false,
+          }));
+        } catch (err) {
+          setState((prev) => ({
+            ...prev,
+            isDithering: false,
+            error: err instanceof Error ? err.message : 'Failed to apply result',
+          }));
+        }
+      };
+
+      const runOnMainThread = () => {
+        if (runDitherAbortedRef.current) return;
+        try {
           const palette =
             currentPalette.length > 0 ? currentPalette : buildPalette(sourceImage, options);
           const { canvas, palette: outPalette } = dither(
@@ -127,10 +188,61 @@ export function useDither() {
             error: err instanceof Error ? err.message : 'Dithering failed',
           }));
         }
-      }, 0);
+      };
+
+      const tryWorker = () => {
+        try {
+          if (!workerRef.current) {
+            workerRef.current = new Worker(
+              new URL('../dither.worker.ts', import.meta.url)
+            );
+            workerRef.current.onmessage = (e: MessageEvent<{ type: string; payload?: DitherResult; error?: string }>) => {
+              if (e.data?.type === 'result' && e.data.payload) {
+                applyWorkerResult(e.data.payload);
+              } else if (e.data?.type === 'error') {
+                runOnMainThread();
+              }
+            };
+            workerRef.current.onerror = () => {
+              runOnMainThread();
+            };
+          }
+          const offscreen = document.createElement('canvas');
+          offscreen.width = w;
+          offscreen.height = h;
+          const ctx = offscreen.getContext('2d');
+          if (!ctx) {
+            runOnMainThread();
+            return;
+          }
+          ctx.drawImage(sourceImage, 0, 0, w, h);
+          const imageData = ctx.getImageData(0, 0, w, h);
+          const payload: DitherPayload = {
+            imageBuffer: imageData.data.buffer,
+            width: w,
+            height: h,
+            options: toWorkerOptions(options),
+            mode,
+            blockSize,
+            palette: currentPalette.length > 0 ? currentPalette : null,
+          };
+          workerRef.current.postMessage({ type: 'dither', payload }, [imageData.data.buffer]);
+        } catch {
+          runOnMainThread();
+        }
+      };
+
+      // Yield so loading overlay can paint, then run in worker (or main-thread fallback)
+      setTimeout(tryWorker, 0);
     },
     [state]
   );
+
+  useEffect(() => {
+    return () => {
+      runDitherAbortedRef.current = true;
+    };
+  }, []);
 
   const clearError = useCallback(() => {
     setState((prev) => ({ ...prev, error: null }));
