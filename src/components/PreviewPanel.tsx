@@ -48,7 +48,7 @@ export function PreviewPanel({
           alignItems: 'center',
           justifyContent: 'center',
           flex: 1,
-          minHeight: '70vh',
+          minHeight: 0,
           p: 3,
         }}
       >
@@ -59,7 +59,7 @@ export function PreviewPanel({
             style={{
               maxWidth: '100%',
               height: 'auto',
-              maxHeight: '85vh',
+              maxHeight: '100%',
               objectFit: 'contain',
             }}
             width={width}

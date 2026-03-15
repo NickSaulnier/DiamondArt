@@ -88,7 +88,8 @@ function App() {
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', md: '300px 1fr' },
             width: '100%',
-            minHeight: 'calc(100vh - 120px)',
+            height: { md: 'calc(100vh - 80px)' },
+            minHeight: { xs: 'calc(100vh - 120px)' },
             alignItems: 'stretch',
           }}
         >
@@ -100,6 +101,12 @@ function App() {
               px: 3,
               py: 2,
               borderRight: { md: '1px solid rgba(0,0,0,0.08)' },
+              width: { md: 300 },
+              maxWidth: { md: 300 },
+              height: { md: 'calc(100vh - 80px)' },
+              maxHeight: { md: 'calc(100vh - 80px)' },
+              overflowY: 'auto',
+              flexShrink: 0,
             }}
           >
             <Typography variant="h6" fontWeight={600}>
@@ -128,6 +135,9 @@ function App() {
               flexDirection: 'column',
               flex: 1,
               minWidth: 0,
+              height: { md: 'calc(100vh - 80px)' },
+              maxHeight: { md: 'calc(100vh - 80px)' },
+              overflow: 'hidden',
               px: 2,
               py: 2,
             }}
