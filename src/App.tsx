@@ -28,6 +28,7 @@ const defaultOptions: RgbQuantOptions = {
 function App() {
   const [mode, setMode] = useState<DitherMode>('Error Diffusion');
   const [blockSize, setBlockSize] = useState(5);
+  const [displayCellSize, setDisplayCellSize] = useState(12);
   const [options, setOptions] = useState<RgbQuantOptions>(defaultOptions);
   const [viewOriginal, setViewOriginal] = useState(false);
 
@@ -118,9 +119,11 @@ function App() {
               options={options}
               mode={mode}
               blockSize={blockSize}
+              displayCellSize={displayCellSize}
               onOptionsChange={setOptions}
               onModeChange={setMode}
               onBlockSizeChange={setBlockSize}
+              onDisplayCellSizeChange={setDisplayCellSize}
               onDither={handleDither}
               hasImage={!!sourceImage}
               isAnalyzing={isAnalyzing}
@@ -151,6 +154,8 @@ function App() {
               ditheredUrl={ditheredUrl}
               width={width}
               height={height}
+              blockSize={blockSize}
+              displayCellSize={displayCellSize}
               viewOriginal={viewOriginal}
               onToggleView={() => setViewOriginal((v) => !v)}
               isDithering={isDithering}

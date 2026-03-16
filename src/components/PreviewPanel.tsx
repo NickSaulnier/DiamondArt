@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { DitheringOverlay } from './DitheringOverlay';
@@ -7,9 +8,17 @@ interface PreviewPanelProps {
   ditheredUrl: string | null;
   width: number;
   height: number;
+  blockSize: number;
+  displayCellSize: number;
   viewOriginal: boolean;
   onToggleView: () => void;
   isDithering?: boolean;
+}
+
+function clampPan(pan: number, viewportSize: number, contentSize: number): number {
+  const min = Math.min(0, viewportSize - contentSize);
+  const max = Math.max(0, viewportSize - contentSize);
+  return Math.min(max, Math.max(min, pan));
 }
 
 export function PreviewPanel({
@@ -17,12 +26,110 @@ export function PreviewPanel({
   ditheredUrl,
   width,
   height,
+  blockSize,
+  displayCellSize,
   viewOriginal,
   onToggleView,
   isDithering = false,
 }: PreviewPanelProps) {
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef<{ clientX: number; clientY: number; panX: number; panY: number } | null>(null);
+
   const showDithered = ditheredUrl != null;
   const displayUrl = viewOriginal ? sourceUrl : (ditheredUrl ?? sourceUrl);
+
+  const scale =
+    !viewOriginal && blockSize > 0 && displayCellSize > 0
+      ? displayCellSize / blockSize
+      : 1;
+  const displayWidth = width * scale;
+  const displayHeight = height * scale;
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      setViewportSize({ width: el.clientWidth, height: el.clientHeight });
+    });
+    ro.observe(el);
+    setViewportSize({ width: el.clientWidth, height: el.clientHeight });
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    setPan({ x: 0, y: 0 });
+  }, [displayUrl, displayWidth, displayHeight]);
+
+  const clampPanToBounds = useCallback(
+    (x: number, y: number) => ({
+      x: clampPan(x, viewportSize.width, displayWidth),
+      y: clampPan(y, viewportSize.height, displayHeight),
+    }),
+    [viewportSize.width, viewportSize.height, displayWidth, displayHeight]
+  );
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (!displayUrl || isDithering) return;
+      e.preventDefault();
+      setIsDragging(true);
+      dragStartRef.current = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        panX: pan.x,
+        panY: pan.y,
+      };
+    },
+    [displayUrl, isDithering, pan.x, pan.y]
+  );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!dragStartRef.current) return;
+      const { clientX, clientY, panX, panY } = dragStartRef.current;
+      const next = clampPanToBounds(panX + e.clientX - clientX, panY + e.clientY - clientY);
+      setPan(next);
+      dragStartRef.current = { clientX: e.clientX, clientY: e.clientY, panX: next.x, panY: next.y };
+    },
+    [clampPanToBounds]
+  );
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (!isDragging) return;
+    const onMove = (e: MouseEvent) => {
+      if (!dragStartRef.current) return;
+      const { clientX, clientY, panX, panY } = dragStartRef.current;
+      const next = clampPanToBounds(panX + e.clientX - clientX, panY + e.clientY - clientY);
+      setPan(next);
+      dragStartRef.current = { clientX: e.clientX, clientY: e.clientY, panX: next.x, panY: next.y };
+    };
+    const onUp = () => {
+      setIsDragging(false);
+      dragStartRef.current = null;
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+  }, [isDragging, clampPanToBounds]);
+
+  const canPan = displayUrl && (displayWidth > viewportSize.width || displayHeight > viewportSize.height);
+  const cursor = isDragging ? 'grabbing' : canPan ? 'grab' : 'default';
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minHeight: 0 }}>
@@ -41,33 +148,61 @@ export function PreviewPanel({
           position: 'relative',
           border: '1px solid rgba(0,0,0,0.08)',
           backgroundColor: '#fafafa',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           flex: 1,
           minHeight: 0,
           p: 3,
+          overflow: 'hidden',
         }}
       >
         <DitheringOverlay visible={isDithering} />
-        {displayUrl ? (
-          <img
-            src={displayUrl}
-            alt={viewOriginal ? 'Original' : 'Dithered'}
-            style={{
-              maxWidth: '100%',
-              height: 'auto',
-              maxHeight: '100%',
-              objectFit: 'contain',
-            }}
-            width={width}
-            height={height}
-          />
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            Preview will appear here
-          </Typography>
-        )}
+        <Box
+          ref={viewportRef}
+          sx={{
+            position: 'absolute',
+            inset: 24,
+            overflow: 'hidden',
+            cursor,
+            userSelect: 'none',
+          }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+        >
+          {displayUrl ? (
+            <Box
+              component="span"
+              sx={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                transform: `translate(${pan.x}px, ${pan.y}px)`,
+                display: 'block',
+                width: displayWidth || 0,
+                height: displayHeight || 0,
+              }}
+            >
+              <img
+                src={displayUrl}
+                alt={viewOriginal ? 'Original' : 'Dithered'}
+                draggable={false}
+                style={{
+                  imageRendering: 'pixelated',
+                  width: displayWidth || undefined,
+                  height: displayHeight || undefined,
+                  display: 'block',
+                  pointerEvents: 'none',
+                }}
+                width={width}
+                height={height}
+              />
+            </Box>
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              Preview will appear here
+            </Typography>
+          )}
+        </Box>
       </Box>
     </Box>
   );

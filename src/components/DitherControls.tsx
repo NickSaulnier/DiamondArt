@@ -26,9 +26,11 @@ interface DitherControlsProps {
   options: RgbQuantOptions;
   mode: DitherMode;
   blockSize: number;
+  displayCellSize: number;
   onOptionsChange: (options: RgbQuantOptions) => void;
   onModeChange: (mode: DitherMode) => void;
   onBlockSizeChange: (value: number) => void;
+  onDisplayCellSizeChange: (value: number) => void;
   onDither: () => void;
   hasImage: boolean;
   isAnalyzing: boolean;
@@ -45,9 +47,11 @@ export function DitherControls({
   options,
   mode,
   blockSize,
+  displayCellSize,
   onOptionsChange,
   onModeChange,
   onBlockSizeChange,
+  onDisplayCellSizeChange,
   onDither,
   hasImage,
   isDithering,
@@ -131,6 +135,23 @@ export function DitherControls({
             ))}
           </Select>
         </FormControl>
+      </Box>
+
+      <Box>
+        <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+          Display cell size (px)
+        </Typography>
+        <Slider
+          value={displayCellSize}
+          onChange={(_, value) =>
+            onDisplayCellSizeChange(Array.isArray(value) ? value[0] : value)
+          }
+          min={4}
+          max={32}
+          step={1}
+          valueLabelDisplay="auto"
+          disabled={!hasImage}
+        />
       </Box>
 
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
