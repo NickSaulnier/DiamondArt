@@ -212,6 +212,7 @@ export function PreviewPanel({
           {displayUrl ? (
             <Box
               component="span"
+              key={viewOriginal ? 'original' : 'dithered'}
               sx={{
                 position: 'absolute',
                 left: 0,

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
@@ -61,6 +61,10 @@ function App() {
   const handleDither = useCallback(() => {
     runDither(options, mode, blockSize);
   }, [runDither, options, mode, blockSize]);
+
+  useEffect(() => {
+    if (ditheredUrl) setViewOriginal(false);
+  }, [ditheredUrl]);
 
   return (
     <div className="h-screen bg-white text-gray-900 flex flex-col overflow-hidden">
