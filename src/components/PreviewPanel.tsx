@@ -59,6 +59,9 @@ export function PreviewPanel({
     blockSize > 0 && displayCellSize > 0 ? displayCellSize / blockSize : 1;
   const displayWidth = width * scale;
   const displayHeight = height * scale;
+  // Grid aligns with pixelation beads (each bead is displayCellSize × displayCellSize on screen)
+  const beadCellSizePx = displayCellSize;
+  const showCellGrid = !viewOriginal && !!ditheredUrl && beadCellSizePx >= 2;
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -237,6 +240,21 @@ export function PreviewPanel({
                 width={width}
                 height={height}
               />
+              {showCellGrid && (
+                <Box
+                  component="span"
+                  sx={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    pointerEvents: 'none',
+                    backgroundImage: `linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px)`,
+                    backgroundSize: `${beadCellSizePx}px ${beadCellSizePx}px`,
+                  }}
+                />
+              )}
             </Box>
           ) : (
             <Typography variant="body2" color="text.secondary" sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
