@@ -58,8 +58,9 @@ export function DitherControls({
 }: DitherControlsProps) {
   return (
     <Box className="space-y-6" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box>
       <Typography variant="subtitle2" fontWeight={600}>
-        Number of colors (beads)
+        Number of colors
       </Typography>
       <Slider
         value={options.colors}
@@ -72,6 +73,7 @@ export function DitherControls({
         valueLabelDisplay="auto"
         disabled={!hasImage}
       />
+      </Box>
 
       <FormControl size="small" fullWidth disabled={!hasImage}>
         <InputLabel>Dither algorithm</InputLabel>
@@ -118,9 +120,6 @@ export function DitherControls({
       )}
 
       <Box>
-        <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-          Bead size
-        </Typography>
         <FormControl size="small" fullWidth disabled={!hasImage}>
           <InputLabel>Bead size</InputLabel>
           <Select
