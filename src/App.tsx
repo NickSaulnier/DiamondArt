@@ -27,7 +27,7 @@ const defaultOptions: RgbQuantOptions = {
 
 function App() {
   const [mode, setMode] = useState<DitherMode>('Error Diffusion');
-  const [blockSize, setBlockSize] = useState(1);
+  const [blockSize, setBlockSize] = useState(5);
   const [options, setOptions] = useState<RgbQuantOptions>(defaultOptions);
   const [viewOriginal, setViewOriginal] = useState(false);
 

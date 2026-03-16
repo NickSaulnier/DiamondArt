@@ -35,6 +35,12 @@ interface DitherControlsProps {
   isDithering: boolean;
 }
 
+const BEAD_SIZE_OPTIONS: { label: string; blockSize: number }[] = [
+  { label: '2.5 mm', blockSize: 4 },
+  { label: '2.8 mm', blockSize: 5 },
+  { label: '3.0 mm', blockSize: 6 },
+];
+
 export function DitherControls({
   options,
   mode,
@@ -109,17 +115,22 @@ export function DitherControls({
 
       <Box>
         <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-          Bead size (pixels)
+          Bead size
         </Typography>
-        <Slider
-          value={blockSize}
-          onChange={(_, value) => onBlockSizeChange(Array.isArray(value) ? value[0] : value)}
-          min={1}
-          max={16}
-          step={1}
-          valueLabelDisplay="auto"
-          disabled={!hasImage}
-        />
+        <FormControl size="small" fullWidth disabled={!hasImage}>
+          <InputLabel>Bead size</InputLabel>
+          <Select
+            value={blockSize}
+            label="Bead size"
+            onChange={(e) => onBlockSizeChange(Number(e.target.value))}
+          >
+            {BEAD_SIZE_OPTIONS.map((opt) => (
+              <MenuItem key={opt.label} value={opt.blockSize}>
+                {opt.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Box>
 
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
