@@ -6,6 +6,13 @@ import { DitheringOverlay } from './DitheringOverlay';
 const DISPLAY_CELL_SIZE_MIN = 4;
 const DISPLAY_CELL_SIZE_MAX = 32;
 
+export interface PreviewViewState {
+  viewportWidth: number;
+  viewportHeight: number;
+  panX: number;
+  panY: number;
+}
+
 interface PreviewPanelProps {
   sourceUrl: string | null;
   ditheredUrl: string | null;
@@ -17,6 +24,7 @@ interface PreviewPanelProps {
   viewOriginal: boolean;
   onToggleView: () => void;
   isDithering?: boolean;
+  previewViewRef?: React.MutableRefObject<PreviewViewState | null>;
 }
 
 function clampPan(pan: number, viewportSize: number, contentSize: number): number {
@@ -36,6 +44,7 @@ export function PreviewPanel({
   viewOriginal,
   onToggleView,
   isDithering = false,
+  previewViewRef,
 }: PreviewPanelProps) {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
@@ -67,6 +76,16 @@ export function PreviewPanel({
   useEffect(() => {
     setPan({ x: 0, y: 0 });
   }, [displayUrl, displayWidth, displayHeight]);
+
+  useEffect(() => {
+    if (!previewViewRef || !ditheredUrl) return;
+    previewViewRef.current = {
+      viewportWidth: viewportSize.width,
+      viewportHeight: viewportSize.height,
+      panX: pan.x,
+      panY: pan.y,
+    };
+  }, [previewViewRef, ditheredUrl, viewportSize.width, viewportSize.height, pan.x, pan.y]);
 
   const clampPanToBounds = useCallback(
     (x: number, y: number) => ({

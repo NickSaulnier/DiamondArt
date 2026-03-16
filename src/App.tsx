@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
@@ -9,6 +9,7 @@ import { DitherControls } from './components/DitherControls';
 import { PreviewPanel } from './components/PreviewPanel';
 import { ColorKey } from './components/ColorKey';
 import { DownloadButton } from './components/DownloadButton';
+import type { PreviewViewState } from './components/PreviewPanel';
 
 const defaultOptions: RgbQuantOptions = {
   colors: 8,
@@ -31,6 +32,7 @@ function App() {
   const [displayCellSize, setDisplayCellSize] = useState(12);
   const [options, setOptions] = useState<RgbQuantOptions>(defaultOptions);
   const [viewOriginal, setViewOriginal] = useState(false);
+  const previewViewRef = useRef<PreviewViewState | null>(null);
 
   const {
     sourceImage,
@@ -130,7 +132,14 @@ function App() {
               isDithering={isDithering}
             />
             <ColorKey palette={palette} />
-            <DownloadButton ditheredCanvas={ditheredCanvas} />
+            <DownloadButton
+              ditheredCanvas={ditheredCanvas}
+              ditheredWidth={width}
+              ditheredHeight={height}
+              displayCellSize={displayCellSize}
+              blockSize={blockSize}
+              previewViewRef={previewViewRef}
+            />
           </Box>
 
           <Box
@@ -160,6 +169,7 @@ function App() {
               viewOriginal={viewOriginal}
               onToggleView={() => setViewOriginal((v) => !v)}
               isDithering={isDithering}
+              previewViewRef={previewViewRef}
             />
           </Box>
         </Box>
