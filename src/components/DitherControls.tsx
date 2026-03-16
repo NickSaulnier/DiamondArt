@@ -59,20 +59,20 @@ export function DitherControls({
   return (
     <Box className="space-y-6" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Box>
-      <Typography variant="subtitle2" fontWeight={600}>
-        Number of colors
-      </Typography>
-      <Slider
-        value={options.colors}
-        onChange={(_, value) =>
-          onOptionsChange({ ...options, colors: Array.isArray(value) ? value[0] : value })
-        }
-        min={2}
-        max={256}
-        step={1}
-        valueLabelDisplay="auto"
-        disabled={!hasImage}
-      />
+        <Typography variant="subtitle2" fontWeight={600}>
+          Number of colors
+        </Typography>
+        <Slider
+          value={options.colors}
+          onChange={(_, value) =>
+            onOptionsChange({ ...options, colors: Array.isArray(value) ? value[0] : value })
+          }
+          min={2}
+          max={256}
+          step={1}
+          valueLabelDisplay="auto"
+          disabled={!hasImage}
+        />
       </Box>
 
       <FormControl size="small" fullWidth disabled={!hasImage}>
