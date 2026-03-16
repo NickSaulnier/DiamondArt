@@ -1,12 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import {
-  buildPalette,
-  dither,
-  addPixelation,
-  type RgbQuantOptions,
-  type DitherMode,
-  type RGBTriplet,
-} from '../lib/dithering';
+import { buildPalette, addPixelation, type RgbQuantOptions, type DitherMode, type RGBTriplet } from '../lib/dithering';
 import type { WorkerRgbQuantOptions, DitherPayload, DitherResult } from '../dither.worker';
 
 export interface UseDitherState {
@@ -157,54 +150,31 @@ export function useDither() {
         }
       };
 
-      const runOnMainThread = () => {
-        if (runDitherAbortedRef.current) return;
-        try {
-          const palette =
-            currentPalette.length > 0 ? currentPalette : buildPalette(sourceImage, options);
-          const { canvas, palette: outPalette } = dither(
-            mode,
-            sourceImage,
-            options,
-            w,
-            h,
-            blockSize,
-            palette
-          );
-          const url = canvas.toDataURL('image/png');
-          setState((prev) => ({
-            ...prev,
-            ditheredCanvas: canvas,
-            ditheredUrl: url,
-            palette: outPalette,
-            width: w,
-            height: h,
-            isDithering: false,
-          }));
-        } catch (err) {
-          setState((prev) => ({
-            ...prev,
-            isDithering: false,
-            error: err instanceof Error ? err.message : 'Dithering failed',
-          }));
-        }
-      };
-
       const tryWorker = () => {
         try {
           if (!workerRef.current) {
             workerRef.current = new Worker(
               new URL('../dither.worker.ts', import.meta.url)
             );
-            workerRef.current.onmessage = (e: MessageEvent<{ type: string; payload?: DitherResult; error?: string }>) => {
+            workerRef.current.onmessage = (
+              e: MessageEvent<{ type: string; payload?: DitherResult; error?: string }>
+            ) => {
               if (e.data?.type === 'result' && e.data.payload) {
                 applyWorkerResult(e.data.payload);
               } else if (e.data?.type === 'error') {
-                runOnMainThread();
+                setState((prev) => ({
+                  ...prev,
+                  isDithering: false,
+                  error: e.data.error ?? 'Dithering failed in worker',
+                }));
               }
             };
             workerRef.current.onerror = () => {
-              runOnMainThread();
+              setState((prev) => ({
+                ...prev,
+                isDithering: false,
+                error: 'Dithering worker error',
+              }));
             };
           }
           const offscreen = document.createElement('canvas');
@@ -212,10 +182,15 @@ export function useDither() {
           offscreen.height = h;
           const ctx = offscreen.getContext('2d');
           if (!ctx) {
-            runOnMainThread();
+            setState((prev) => ({
+              ...prev,
+              isDithering: false,
+              error: 'Could not get canvas 2d context',
+            }));
             return;
           }
-          ctx.drawImage(sourceImage, 0, 0, w, h);
+          const imgSource = sourceImage as unknown as CanvasImageSource;
+          ctx.drawImage(imgSource, 0, 0, w, h);
           const imageData = ctx.getImageData(0, 0, w, h);
           const payload: DitherPayload = {
             imageBuffer: imageData.data.buffer,
@@ -227,13 +202,17 @@ export function useDither() {
             palette: currentPalette.length > 0 ? currentPalette : null,
           };
           workerRef.current.postMessage({ type: 'dither', payload }, [imageData.data.buffer]);
-        } catch {
-          runOnMainThread();
+        } catch (err) {
+          setState((prev) => ({
+            ...prev,
+            isDithering: false,
+            error: err instanceof Error ? err.message : 'Failed to start dithering worker',
+          }));
         }
       };
 
-      // Yield so loading overlay can paint, then run in worker (or main-thread fallback)
-      setTimeout(tryWorker, 0);
+      // Yield so loading overlay can paint, then run in worker
+      setTimeout(tryWorker, 32);
     },
     [state]
   );

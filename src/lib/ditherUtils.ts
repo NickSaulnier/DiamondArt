@@ -28,10 +28,7 @@ export const BAYER_THRESHOLD_MAP: number[][] = [
  * Apply Bayer matrix dither to ImageData in place (buffer-only, no canvas).
  * Used by the Web Worker.
  */
-export function bayerDitherBuffer(
-  imageData: ImageData,
-  palette: RGBTriplet[]
-): void {
+export function bayerDitherBuffer(imageData: ImageData, palette: RGBTriplet[]): void {
   const data = imageData.data;
   const w = imageData.width;
   const paletteRgb = palette.map((c) => [c[0], c[1], c[2]] as [number, number, number]);

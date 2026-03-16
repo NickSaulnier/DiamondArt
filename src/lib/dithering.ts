@@ -72,7 +72,8 @@ export function ditherWithRgbQuant(
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get canvas 2d context');
-  ctx.drawImage(image, 0, 0, width, height);
+  const imgSource = image as unknown as CanvasImageSource;
+  ctx.drawImage(imgSource, 0, 0, width, height);
 
   const q = new RgbQuant({
     colors: options.colors,
@@ -131,14 +132,24 @@ export function addPixelation(
   tempCtxAny.msImageSmoothingEnabled = false;
   tempCtxAny.mozImageSmoothingEnabled = false;
   tempCtxAny.webkitImageSmoothingEnabled = false;
-  tempCtx.drawImage(sourceCanvas, 0, 0, tempCanvas.width, tempCanvas.height);
+  tempCtx.drawImage(sourceCanvas as unknown as CanvasImageSource, 0, 0, tempCanvas.width, tempCanvas.height);
 
   ctx.imageSmoothingEnabled = false;
   const ctxAny = ctx as unknown as Record<string, boolean>;
   ctxAny.msImageSmoothingEnabled = false;
   ctxAny.mozImageSmoothingEnabled = false;
   ctxAny.webkitImageSmoothingEnabled = false;
-  ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, width, height);
+  ctx.drawImage(
+    tempCanvas as unknown as CanvasImageSource,
+    0,
+    0,
+    tempCanvas.width,
+    tempCanvas.height,
+    0,
+    0,
+    width,
+    height
+  );
 }
 
 /**
@@ -199,7 +210,8 @@ export function dither(
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get canvas 2d context');
-  ctx.drawImage(image, 0, 0, width, height);
+  const imgSource = image as unknown as CanvasImageSource;
+  ctx.drawImage(imgSource, 0, 0, width, height);
 
   if (mode === 'Bayer') {
     const imageData = ctx.getImageData(0, 0, width, height);

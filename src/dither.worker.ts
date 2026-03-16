@@ -1,4 +1,3 @@
-/// <reference lib="webworker" />
 import RgbQuant from 'rgbquant';
 import { bayerDitherBuffer, type RGBTriplet } from './lib/ditherUtils';
 
@@ -111,7 +110,10 @@ self.onmessage = (e: MessageEvent<{ type: 'dither'; payload: DitherPayload }>) =
       height,
       blockSize,
     };
-    self.postMessage({ type: 'result', payload: response }, [resultBuffer]);
+    (self as unknown as { postMessage: (message: unknown, transfer: Transferable[]) => void }).postMessage(
+      { type: 'result', payload: response },
+      [resultBuffer as unknown as Transferable]
+    );
   } catch (err) {
     self.postMessage({
       type: 'error',
