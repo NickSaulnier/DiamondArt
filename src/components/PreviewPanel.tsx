@@ -3,6 +3,9 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { DitheringOverlay } from './DitheringOverlay';
 
+const DISPLAY_CELL_SIZE_MIN = 4;
+const DISPLAY_CELL_SIZE_MAX = 32;
+
 interface PreviewPanelProps {
   sourceUrl: string | null;
   ditheredUrl: string | null;
@@ -10,6 +13,7 @@ interface PreviewPanelProps {
   height: number;
   blockSize: number;
   displayCellSize: number;
+  onDisplayCellSizeChange: (value: number) => void;
   viewOriginal: boolean;
   onToggleView: () => void;
   isDithering?: boolean;
@@ -28,6 +32,7 @@ export function PreviewPanel({
   height,
   blockSize,
   displayCellSize,
+  onDisplayCellSizeChange,
   viewOriginal,
   onToggleView,
   isDithering = false,
@@ -130,6 +135,23 @@ export function PreviewPanel({
 
   const canPan = displayUrl && (displayWidth > viewportSize.width || displayHeight > viewportSize.height);
   const cursor = isDragging ? 'grabbing' : canPan ? 'grab' : 'default';
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const handleWheel = (e: WheelEvent) => {
+      if (!displayUrl || isDithering) return;
+      e.preventDefault();
+      const step = e.deltaY > 0 ? -1 : 1;
+      const next = Math.max(
+        DISPLAY_CELL_SIZE_MIN,
+        Math.min(DISPLAY_CELL_SIZE_MAX, displayCellSize + step)
+      );
+      if (next !== displayCellSize) onDisplayCellSizeChange(next);
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [displayUrl, isDithering, displayCellSize, onDisplayCellSizeChange]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minHeight: 0 }}>

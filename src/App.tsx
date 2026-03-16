@@ -156,6 +156,7 @@ function App() {
               height={height}
               blockSize={blockSize}
               displayCellSize={displayCellSize}
+              onDisplayCellSizeChange={setDisplayCellSize}
               viewOriginal={viewOriginal}
               onToggleView={() => setViewOriginal((v) => !v)}
               isDithering={isDithering}
