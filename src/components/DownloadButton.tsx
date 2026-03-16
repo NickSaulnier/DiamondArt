@@ -29,7 +29,11 @@ export function DownloadButton({
     const displayWidth = ditheredWidth * scale;
     const displayHeight = ditheredHeight * scale;
 
-    let canvasToExport: HTMLCanvasElement = ditheredCanvas;
+    let exportCanvas: HTMLCanvasElement = ditheredCanvas;
+    let exportW = ditheredWidth;
+    let exportH = ditheredHeight;
+    let offsetX = 0;
+    let offsetY = 0;
 
     if (
       view &&
@@ -65,13 +69,46 @@ export function DownloadButton({
           if (ctx) {
             const srcImage = ditheredCanvas as unknown as CanvasImageSource;
             ctx.drawImage(srcImage, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
-            canvasToExport = cropped;
+            exportCanvas = cropped;
+            exportW = srcW;
+            exportH = srcH;
+            offsetX = srcX;
+            offsetY = srcY;
           }
         }
       }
     }
 
-    const url = canvasToExport.toDataURL('image/png');
+    const withGrid = blockSize >= 2;
+    let finalCanvas: HTMLCanvasElement = exportCanvas;
+    if (withGrid) {
+      const out = document.createElement('canvas');
+      out.width = exportW;
+      out.height = exportH;
+      const ctx = out.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(exportCanvas as unknown as CanvasImageSource, 0, 0);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1;
+        const startX = (blockSize - (offsetX % blockSize)) % blockSize;
+        const startY = (blockSize - (offsetY % blockSize)) % blockSize;
+        for (let x = startX; x <= exportW; x += blockSize) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, exportH);
+          ctx.stroke();
+        }
+        for (let y = startY; y <= exportH; y += blockSize) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(exportW, y);
+          ctx.stroke();
+        }
+        finalCanvas = out;
+      }
+    }
+
+    const url = finalCanvas.toDataURL('image/png');
     const a = document.createElement('a');
     a.href = url;
     a.download = 'dithered.png';
