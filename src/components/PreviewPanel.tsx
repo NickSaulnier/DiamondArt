@@ -56,9 +56,7 @@ export function PreviewPanel({
   const displayUrl = viewOriginal ? sourceUrl : (ditheredUrl ?? sourceUrl);
 
   const scale =
-    !viewOriginal && blockSize > 0 && displayCellSize > 0
-      ? displayCellSize / blockSize
-      : 1;
+    blockSize > 0 && displayCellSize > 0 ? displayCellSize / blockSize : 1;
   const displayWidth = width * scale;
   const displayHeight = height * scale;
 
