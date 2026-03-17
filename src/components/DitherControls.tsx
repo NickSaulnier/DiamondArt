@@ -62,7 +62,7 @@ export function DitherControls({
     <Box className="space-y-6" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Box>
         <Typography variant="subtitle2" fontWeight={600}>
-          Number of colors
+          Max Number of colors
         </Typography>
         <Slider
           value={options.colors}
@@ -70,7 +70,7 @@ export function DitherControls({
             onOptionsChange({ ...options, colors: Array.isArray(value) ? value[0] : value })
           }
           min={2}
-          max={256}
+          max={64}
           step={1}
           valueLabelDisplay="auto"
           disabled={!hasImage}

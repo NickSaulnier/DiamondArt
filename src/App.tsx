@@ -30,7 +30,7 @@ const defaultOptions: RgbQuantOptions = {
 function App() {
   const [mode, setMode] = useState<DitherMode>('Error Diffusion');
   const [blockSize, setBlockSize] = useState(5);
-  const [displayCellSize, setDisplayCellSize] = useState(12);
+  const [displayCellSize, setDisplayCellSize] = useState(6);
   const [options, setOptions] = useState<RgbQuantOptions>(defaultOptions);
   const [viewOriginal, setViewOriginal] = useState(false);
   const previewViewRef = useRef<PreviewViewState | null>(null);
