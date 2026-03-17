@@ -1,13 +1,18 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import type { RGBTriplet } from '../lib/dithering';
+import type { DmcColor } from '../lib/dmcPalette';
 
-interface ColorKeyProps {
-  palette: RGBTriplet[];
+export interface ColorEntry {
+  id: number;
+  dmc: DmcColor;
 }
 
-export function ColorKey({ palette }: ColorKeyProps) {
-  if (palette.length === 0) return null;
+interface ColorKeyProps {
+  colors: ColorEntry[];
+}
+
+export function ColorKey({ colors }: ColorKeyProps) {
+  if (!colors || colors.length === 0) return null;
 
   return (
     <Box sx={{ mt: 2 }}>
@@ -17,21 +22,44 @@ export function ColorKey({ palette }: ColorKeyProps) {
       <Box
         sx={{
           display: 'flex',
-          flexWrap: 'wrap',
+          flexDirection: 'column',
           gap: 0.5,
+          maxHeight: 200,
+          overflowY: 'auto',
         }}
       >
-        {palette.map(([r, g, b], i) => (
+        {colors.map(({ id, dmc }) => (
           <Box
-            key={`${r}-${g}-${b}-${i}`}
+            key={dmc.code}
             sx={{
-              width: 24,
-              height: 24,
-              backgroundColor: `rgb(${r},${g},${b})`,
-              border: '1px solid rgba(0,0,0,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              fontSize: 12,
             }}
-            title={`#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')} (${i + 1})`}
-          />
+          >
+            <Box
+              sx={{
+                minWidth: 20,
+                textAlign: 'right',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {id}
+            </Box>
+            <Box
+              sx={{
+                width: 20,
+                height: 20,
+                backgroundColor: `rgb(${dmc.rgb[0]},${dmc.rgb[1]},${dmc.rgb[2]})`,
+                border: '1px solid rgba(0,0,0,0.2)',
+              }}
+            />
+            <Box sx={{ minWidth: 50 }}>{dmc.code}</Box>
+            <Box sx={{ color: 'text.secondary', fontSize: 11, whiteSpace: 'nowrap' }}>
+              {dmc.name}
+            </Box>
+          </Box>
         ))}
       </Box>
     </Box>

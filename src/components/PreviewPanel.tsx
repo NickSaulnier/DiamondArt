@@ -19,6 +19,8 @@ interface PreviewPanelProps {
   width: number;
   height: number;
   blockSize: number;
+  beadCols: number;
+  beadRows: number;
   displayCellSize: number;
   onDisplayCellSizeChange: (value: number) => void;
   viewOriginal: boolean;
@@ -39,6 +41,8 @@ export function PreviewPanel({
   width,
   height,
   blockSize,
+  beadCols,
+  beadRows,
   displayCellSize,
   onDisplayCellSizeChange,
   viewOriginal,
@@ -51,21 +55,28 @@ export function PreviewPanel({
   const [isDragging, setIsDragging] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef<{ clientX: number; clientY: number; panX: number; panY: number } | null>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
   const showDithered = ditheredUrl != null;
   const displayUrl = viewOriginal ? sourceUrl : (ditheredUrl ?? sourceUrl);
 
-  const scale =
+  // Base scale from source pixels to display pixels
+  const baseScale =
     blockSize > 0 && displayCellSize > 0 ? displayCellSize / blockSize : 1;
-  const displayWidth = width * scale;
-  const displayHeight = height * scale;
 
-  // Number of bead cells in each dimension; must match addPixelation, which uses
-  // tempCanvas.width = width / blockSize and tempCanvas.height = height / blockSize
-  // (both implicitly floored to integers).
-  const beadCols = blockSize > 0 ? Math.floor(width / blockSize) : 0;
-  const beadRows = blockSize > 0 ? Math.floor(height / blockSize) : 0;
-  // Actual on-screen bead cell size, derived from displayed width/height and bead counts
+  // Default display size derived from original dimensions
+  let displayWidth = width * baseScale;
+  let displayHeight = height * baseScale;
+
+  // For dithered view, snap the display size exactly to the bead grid so that
+  // each bead cell is a perfect `displayCellSize` square and the grid aligns.
+  if (!viewOriginal && beadCols > 0 && beadRows > 0) {
+    displayWidth = beadCols * displayCellSize;
+    displayHeight = beadRows * displayCellSize;
+  }
+
+  // Actual on-screen bead cell size; for dithered view this will equal
+  // `displayCellSize` in both directions.
   const beadCellSizeX = beadCols > 0 ? displayWidth / beadCols : 0;
   const beadCellSizeY = beadRows > 0 ? displayHeight / beadRows : 0;
   const showCellGrid =
@@ -235,6 +246,7 @@ export function PreviewPanel({
               }}
             >
               <img
+                ref={imgRef}
                 src={displayUrl}
                 alt={viewOriginal ? 'Original' : 'Dithered'}
                 draggable={false}
@@ -255,8 +267,8 @@ export function PreviewPanel({
                     position: 'absolute',
                     left: 0,
                     top: 0,
-                    right: 0,
-                    bottom: 0,
+                    width: displayWidth || 0,
+                    height: displayHeight || 0,
                     pointerEvents: 'none',
                     backgroundImage: `linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px)`,
                     backgroundSize: `${beadCellSizeX}px ${beadCellSizeY}px`,

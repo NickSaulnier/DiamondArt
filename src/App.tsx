@@ -37,11 +37,14 @@ function App() {
   const {
     sourceImage,
     sourceUrl,
-    palette,
-    ditheredCanvas,
     ditheredUrl,
     width,
     height,
+    beadGrid,
+    beadCols,
+    beadRows,
+    colorEntries,
+    blockSizeUsed,
     error,
     isAnalyzing,
     isDithering,
@@ -126,6 +129,7 @@ function App() {
               mode={mode}
               blockSize={blockSize}
               displayCellSize={displayCellSize}
+              usedColorCount={colorEntries.length}
               onOptionsChange={setOptions}
               onModeChange={setMode}
               onBlockSizeChange={setBlockSize}
@@ -135,15 +139,8 @@ function App() {
               isAnalyzing={isAnalyzing}
               isDithering={isDithering}
             />
-            <ColorKey palette={palette} />
-            <DownloadButton
-              ditheredCanvas={ditheredCanvas}
-              ditheredWidth={width}
-              ditheredHeight={height}
-              displayCellSize={displayCellSize}
-              blockSize={blockSize}
-              previewViewRef={previewViewRef}
-            />
+            <ColorKey colors={colorEntries} />
+            <DownloadButton beadGrid={beadGrid} beadCols={beadCols} beadRows={beadRows} />
           </Box>
 
           <Box
@@ -167,7 +164,9 @@ function App() {
               ditheredUrl={ditheredUrl}
               width={width}
               height={height}
-              blockSize={blockSize}
+              blockSize={blockSizeUsed || blockSize}
+              beadCols={beadCols}
+              beadRows={beadRows}
               displayCellSize={displayCellSize}
               onDisplayCellSizeChange={setDisplayCellSize}
               viewOriginal={viewOriginal}

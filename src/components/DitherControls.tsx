@@ -27,6 +27,7 @@ interface DitherControlsProps {
   mode: DitherMode;
   blockSize: number;
   displayCellSize: number;
+  usedColorCount?: number;
   onOptionsChange: (options: RgbQuantOptions) => void;
   onModeChange: (mode: DitherMode) => void;
   onBlockSizeChange: (value: number) => void;
@@ -48,6 +49,7 @@ export function DitherControls({
   mode,
   blockSize,
   displayCellSize,
+  usedColorCount,
   onOptionsChange,
   onModeChange,
   onBlockSizeChange,
@@ -73,6 +75,11 @@ export function DitherControls({
           valueLabelDisplay="auto"
           disabled={!hasImage}
         />
+        {typeof usedColorCount === 'number' && (
+          <Typography variant="caption" color="text.secondary">
+            DMC colors used: {usedColorCount}
+          </Typography>
+        )}
       </Box>
 
       <FormControl size="small" fullWidth disabled={!hasImage}>
