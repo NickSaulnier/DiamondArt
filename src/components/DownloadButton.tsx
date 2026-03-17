@@ -32,8 +32,6 @@ export function DownloadButton({
     let exportCanvas: HTMLCanvasElement = ditheredCanvas;
     let exportW = ditheredWidth;
     let exportH = ditheredHeight;
-    let offsetX = 0;
-    let offsetY = 0;
 
     if (
       view &&
@@ -51,10 +49,11 @@ export function DownloadButton({
 
       if (imgW > 0 && imgH > 0) {
         const scaleDown = blockSize / displayCellSize;
-        let srcX = Math.floor(imgStartX * scaleDown);
-        let srcY = Math.floor(imgStartY * scaleDown);
-        let srcW = Math.ceil(imgW * scaleDown);
-        let srcH = Math.ceil(imgH * scaleDown);
+        // Compute crop in source pixels, snapping to whole bead blocks so grid aligns exactly.
+        let srcX = Math.floor((imgStartX * scaleDown) / blockSize) * blockSize;
+        let srcY = Math.floor((imgStartY * scaleDown) / blockSize) * blockSize;
+        let srcW = Math.floor((imgW * scaleDown) / blockSize) * blockSize;
+        let srcH = Math.floor((imgH * scaleDown) / blockSize) * blockSize;
 
         srcX = Math.max(0, Math.min(srcX, ditheredWidth - 1));
         srcY = Math.max(0, Math.min(srcY, ditheredHeight - 1));
@@ -72,8 +71,6 @@ export function DownloadButton({
             exportCanvas = cropped;
             exportW = srcW;
             exportH = srcH;
-            offsetX = srcX;
-            offsetY = srcY;
           }
         }
       }
@@ -82,28 +79,40 @@ export function DownloadButton({
     const withGrid = blockSize >= 2;
     let finalCanvas: HTMLCanvasElement = exportCanvas;
     if (withGrid) {
+      const gridW = exportW;
+      const gridH = exportH;
       const out = document.createElement('canvas');
-      out.width = exportW;
-      out.height = exportH;
+      out.width = gridW;
+      out.height = gridH;
       const ctx = out.getContext('2d');
       if (ctx) {
         ctx.drawImage(exportCanvas as unknown as CanvasImageSource, 0, 0);
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 1;
-        const startX = (blockSize - (offsetX % blockSize)) % blockSize;
-        const startY = (blockSize - (offsetY % blockSize)) % blockSize;
-        for (let x = startX; x <= exportW; x += blockSize) {
-          ctx.beginPath();
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, exportH);
-          ctx.stroke();
+
+        // Match bead grid used during pixelation for this region only.
+        const beadCols = blockSize > 0 ? Math.floor(gridW / blockSize) : 0;
+        const beadRows = blockSize > 0 ? Math.floor(gridH / blockSize) : 0;
+        const cellW = beadCols > 0 ? gridW / beadCols : 0;
+        const cellH = beadRows > 0 ? gridH / beadRows : 0;
+
+        if (cellW > 0 && cellH > 0) {
+          for (let col = 0; col <= beadCols; col += 1) {
+            const x = col * cellW;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, gridH);
+            ctx.stroke();
+          }
+          for (let row = 0; row <= beadRows; row += 1) {
+            const y = row * cellH;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(gridW, y);
+            ctx.stroke();
+          }
         }
-        for (let y = startY; y <= exportH; y += blockSize) {
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(exportW, y);
-          ctx.stroke();
-        }
+
         finalCanvas = out;
       }
     }

@@ -59,9 +59,17 @@ export function PreviewPanel({
     blockSize > 0 && displayCellSize > 0 ? displayCellSize / blockSize : 1;
   const displayWidth = width * scale;
   const displayHeight = height * scale;
-  // Grid aligns with pixelation beads (each bead is displayCellSize × displayCellSize on screen)
-  const beadCellSizePx = displayCellSize;
-  const showCellGrid = !viewOriginal && !!ditheredUrl && beadCellSizePx >= 2;
+
+  // Number of bead cells in each dimension; must match addPixelation, which uses
+  // tempCanvas.width = width / blockSize and tempCanvas.height = height / blockSize
+  // (both implicitly floored to integers).
+  const beadCols = blockSize > 0 ? Math.floor(width / blockSize) : 0;
+  const beadRows = blockSize > 0 ? Math.floor(height / blockSize) : 0;
+  // Actual on-screen bead cell size, derived from displayed width/height and bead counts
+  const beadCellSizeX = beadCols > 0 ? displayWidth / beadCols : 0;
+  const beadCellSizeY = beadRows > 0 ? displayHeight / beadRows : 0;
+  const showCellGrid =
+    !viewOriginal && !!ditheredUrl && beadCellSizeX >= 2 && beadCellSizeY >= 2;
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -251,7 +259,7 @@ export function PreviewPanel({
                     bottom: 0,
                     pointerEvents: 'none',
                     backgroundImage: `linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px)`,
-                    backgroundSize: `${beadCellSizePx}px ${beadCellSizePx}px`,
+                    backgroundSize: `${beadCellSizeX}px ${beadCellSizeY}px`,
                   }}
                 />
               )}
