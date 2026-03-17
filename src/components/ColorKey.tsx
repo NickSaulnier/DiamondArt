@@ -4,6 +4,7 @@ import type { DmcColor } from '../lib/dmcPalette';
 
 export interface ColorEntry {
   id: number;
+  dmcIndex: number;
   dmc: DmcColor;
 }
 

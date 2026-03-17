@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { DitheringOverlay } from './DitheringOverlay';
+import type { ColorEntry } from './ColorKey';
 
 const DISPLAY_CELL_SIZE_MIN = 4;
 const DISPLAY_CELL_SIZE_MAX = 32;
@@ -21,6 +22,8 @@ interface PreviewPanelProps {
   blockSize: number;
   beadCols: number;
   beadRows: number;
+  beadGrid: number[][] | null;
+  colorEntries: ColorEntry[];
   displayCellSize: number;
   onDisplayCellSizeChange: (value: number) => void;
   viewOriginal: boolean;
@@ -43,6 +46,8 @@ export function PreviewPanel({
   blockSize,
   beadCols,
   beadRows,
+  beadGrid,
+  colorEntries,
   displayCellSize,
   onDisplayCellSizeChange,
   viewOriginal,
@@ -56,6 +61,7 @@ export function PreviewPanel({
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef<{ clientX: number; clientY: number; panX: number; panY: number } | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const numbersCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const showDithered = ditheredUrl != null;
   const displayUrl = viewOriginal ? sourceUrl : (ditheredUrl ?? sourceUrl);
@@ -81,6 +87,48 @@ export function PreviewPanel({
   const beadCellSizeY = beadRows > 0 ? displayHeight / beadRows : 0;
   const showCellGrid =
     !viewOriginal && !!ditheredUrl && beadCellSizeX >= 2 && beadCellSizeY >= 2;
+
+  useEffect(() => {
+    const canvas = numbersCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = displayWidth || 0;
+    canvas.height = displayHeight || 0;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!showCellGrid || !beadGrid || beadCols <= 0 || beadRows <= 0) {
+      return;
+    }
+
+    const idByDmcIndex = new Map<number, number>();
+    colorEntries.forEach(({ id, dmcIndex }) => {
+      idByDmcIndex.set(dmcIndex, id);
+    });
+
+    const fontSize = Math.max(6, Math.min(10, beadCellSizeY * 0.45));
+    ctx.font = `${fontSize}px sans-serif`;
+    ctx.fillStyle = '#000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    for (let row = 0; row < beadRows; row += 1) {
+      const rowArr = beadGrid[row];
+      if (!rowArr) continue;
+      for (let col = 0; col < beadCols; col += 1) {
+        const dmcIndex = rowArr[col];
+        if (dmcIndex == null) continue;
+        const id = idByDmcIndex.get(dmcIndex);
+        if (id == null) continue;
+        const x = col * beadCellSizeX + beadCellSizeX / 2;
+        const y = row * beadCellSizeY + 1;
+        ctx.fillText(String(id), x, y);
+      }
+    }
+  }, [showCellGrid, beadGrid, beadCols, beadRows, beadCellSizeX, beadCellSizeY, colorEntries, displayWidth, displayHeight]);
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -260,6 +308,19 @@ export function PreviewPanel({
                 width={width}
                 height={height}
               />
+              {!viewOriginal && (
+                <canvas
+                  ref={numbersCanvasRef}
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    width: displayWidth || 0,
+                    height: displayHeight || 0,
+                    pointerEvents: 'none',
+                  }}
+                />
+              )}
               {showCellGrid && (
                 <Box
                   component="span"

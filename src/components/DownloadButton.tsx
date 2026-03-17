@@ -1,16 +1,18 @@
 import Button from '@mui/material/Button';
 import { DMC_PALETTE } from '../lib/dmcPalette';
+import type { ColorEntry } from './ColorKey';
 
 interface DownloadButtonProps {
   beadGrid: number[][] | null;
   beadCols: number;
   beadRows: number;
+  colorEntries: ColorEntry[];
   disabled?: boolean;
 }
 
-export function DownloadButton({ beadGrid, beadCols, beadRows, disabled }: DownloadButtonProps) {
+export function DownloadButton({ beadGrid, beadCols, beadRows, colorEntries, disabled }: DownloadButtonProps) {
   const handleDownload = () => {
-    if (!beadGrid || beadCols <= 0 || beadRows <= 0) return;
+    if (!beadGrid || beadCols <= 0 || beadRows <= 0 || colorEntries.length === 0) return;
 
     const cellSize = 24; // export cell size in pixels
     const exportW = beadCols * cellSize;
@@ -21,6 +23,16 @@ export function DownloadButton({ beadGrid, beadCols, beadRows, disabled }: Downl
     canvas.height = exportH;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    const idByDmcIndex = new Map<number, number>();
+    colorEntries.forEach(({ id, dmcIndex }) => {
+      idByDmcIndex.set(dmcIndex, id);
+    });
+
+    const fontSize = Math.max(6, Math.min(10, cellSize * 0.4));
+    ctx.font = `${fontSize}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
 
     for (let row = 0; row < beadRows; row += 1) {
       const rowArr = beadGrid[row];
@@ -36,6 +48,12 @@ export function DownloadButton({ beadGrid, beadCols, beadRows, disabled }: Downl
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 1;
         ctx.strokeRect(x + 0.5, y + 0.5, cellSize - 1, cellSize - 1);
+
+        const id = idByDmcIndex.get(dmcIndex);
+        if (id != null) {
+          ctx.fillStyle = '#000';
+          ctx.fillText(String(id), x + cellSize / 2, y + 1);
+        }
       }
     }
 

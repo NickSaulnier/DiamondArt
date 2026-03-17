@@ -1,16 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { buildPalette, addPixelation, type RgbQuantOptions, type DitherMode, type RGBTriplet } from '../lib/dithering';
-import { DMC_PALETTE, type DmcColor } from '../lib/dmcPalette';
+import { DMC_PALETTE } from '../lib/dmcPalette';
+import type { ColorEntry } from '../components/ColorKey';
 import type { WorkerRgbQuantOptions, DitherPayload, DitherResult } from '../dither.worker';
 
 export interface UseDitherState {
   sourceImage: HTMLImageElement | null;
   sourceUrl: string | null;
   // Distinct DMC colors used in the current pattern.
-  colorEntries: Array<{
-    id: number;
-    dmc: DmcColor;
-  }>;
+  colorEntries: ColorEntry[];
   ditheredCanvas: HTMLCanvasElement | null;
   ditheredUrl: string | null;
   width: number;
@@ -214,6 +212,7 @@ export function useDither() {
           const sortedIndices = Array.from(usedDmcIndices).sort((a, b) => a - b);
           const colorEntries = sortedIndices.map((dmcIndex, i) => ({
             id: i + 1,
+            dmcIndex,
             dmc: DMC_PALETTE[dmcIndex],
           }));
 

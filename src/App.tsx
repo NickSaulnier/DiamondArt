@@ -9,6 +9,7 @@ import { DitherControls } from './components/DitherControls';
 import { PreviewPanel } from './components/PreviewPanel';
 import { ColorKey } from './components/ColorKey';
 import { DownloadButton } from './components/DownloadButton';
+import { DownloadPdfButton } from './components/DownloadPdfButton';
 import type { PreviewViewState } from './components/PreviewPanel';
 
 const defaultOptions: RgbQuantOptions = {
@@ -140,7 +141,20 @@ function App() {
               isDithering={isDithering}
             />
             <ColorKey colors={colorEntries} />
-            <DownloadButton beadGrid={beadGrid} beadCols={beadCols} beadRows={beadRows} />
+            <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <DownloadButton
+                beadGrid={beadGrid}
+                beadCols={beadCols}
+                beadRows={beadRows}
+                colorEntries={colorEntries}
+              />
+              <DownloadPdfButton
+                beadGrid={beadGrid}
+                beadCols={beadCols}
+                beadRows={beadRows}
+                colorEntries={colorEntries}
+              />
+            </Box>
           </Box>
 
           <Box
@@ -167,6 +181,8 @@ function App() {
               blockSize={blockSizeUsed || blockSize}
               beadCols={beadCols}
               beadRows={beadRows}
+              beadGrid={beadGrid}
+              colorEntries={colorEntries}
               displayCellSize={displayCellSize}
               onDisplayCellSizeChange={setDisplayCellSize}
               viewOriginal={viewOriginal}
