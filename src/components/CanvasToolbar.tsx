@@ -39,6 +39,7 @@ export function CanvasToolbar({
         right: 8,
         top: '50%',
         transform: 'translateY(-50%)',
+        zIndex: (theme) => theme.zIndex.modal + 1,
         width: 48,
         display: 'flex',
         flexDirection: 'column',
