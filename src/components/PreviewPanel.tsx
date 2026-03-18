@@ -61,6 +61,7 @@ export function PreviewPanel({
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [showGridLines, setShowGridLines] = useState(true);
+  const [showNumberKeys, setShowNumberKeys] = useState(true);
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef<{ clientX: number; clientY: number; panX: number; panY: number } | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -103,7 +104,7 @@ export function PreviewPanel({
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (!showCellGrid || !beadGrid || beadCols <= 0 || beadRows <= 0) {
+    if (!showNumberKeys || !showCellGrid || !beadGrid || beadCols <= 0 || beadRows <= 0) {
       return;
     }
 
@@ -131,7 +132,7 @@ export function PreviewPanel({
         ctx.fillText(String(id), x, y);
       }
     }
-  }, [showCellGrid, beadGrid, beadCols, beadRows, beadCellSizeX, beadCellSizeY, colorEntries, displayWidth, displayHeight]);
+  }, [showNumberKeys, showCellGrid, beadGrid, beadCols, beadRows, beadCellSizeX, beadCellSizeY, colorEntries, displayWidth, displayHeight]);
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -257,17 +258,28 @@ export function PreviewPanel({
         </button>
       )}
       {showDithered && !viewOriginal && (
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={showGridLines}
-              onChange={(_, checked) => setShowGridLines(checked)}
-              size="small"
-            />
-          }
-          label="Show grid lines"
-          sx={{ alignSelf: 'flex-start' }}
-        />
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignSelf: 'flex-start' }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={showGridLines}
+                onChange={(_, checked) => setShowGridLines(checked)}
+                size="small"
+              />
+            }
+            label="Show grid lines"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={showNumberKeys}
+                onChange={(_, checked) => setShowNumberKeys(checked)}
+                size="small"
+              />
+            }
+            label="Show number keys"
+          />
+        </Box>
       )}
       <Box
         sx={{
