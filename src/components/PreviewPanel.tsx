@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
 import { DitheringOverlay } from './DitheringOverlay';
 import type { ColorEntry } from './ColorKey';
@@ -58,6 +60,7 @@ export function PreviewPanel({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [showGridLines, setShowGridLines] = useState(true);
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef<{ clientX: number; clientY: number; panX: number; panY: number } | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -253,6 +256,19 @@ export function PreviewPanel({
           {viewOriginal ? 'Show dithered' : 'Show original'}
         </button>
       )}
+      {showDithered && !viewOriginal && (
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={showGridLines}
+              onChange={(_, checked) => setShowGridLines(checked)}
+              size="small"
+            />
+          }
+          label="Show grid lines"
+          sx={{ alignSelf: 'flex-start' }}
+        />
+      )}
       <Box
         sx={{
           position: 'relative',
@@ -321,7 +337,7 @@ export function PreviewPanel({
                   }}
                 />
               )}
-              {showCellGrid && (
+              {showCellGrid && showGridLines && (
                 <Box
                   component="span"
                   sx={{
