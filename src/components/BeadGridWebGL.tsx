@@ -220,6 +220,7 @@ export function BeadGridWebGL({
         display: 'inline-block',
         width: displayWidth || 0,
         height: displayHeight || 0,
+        cursor: 'none',
       }}
     >
       <Box
@@ -235,6 +236,7 @@ export function BeadGridWebGL({
           width: displayWidth || 0,
           height: displayHeight || 0,
           imageRendering: 'pixelated',
+          cursor: 'none',
         }}
         style={{
           width: displayWidth || 0,

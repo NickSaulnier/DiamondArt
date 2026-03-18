@@ -228,7 +228,9 @@ export function PreviewPanel({
   }, [isDragging, clampPanToBounds]);
 
   const canPan = displayUrl && !isColoringMode && (displayWidth > viewportSize.width || displayHeight > viewportSize.height);
-  const cursor = isColoringMode ? 'none' : isDragging ? 'grabbing' : canPan ? 'grab' : 'default';
+  // In coloring mode, only the image overlay should hide the cursor.
+  // The viewport should keep a normal pointer when you're not over the image.
+  const cursor = isDragging ? 'grabbing' : canPan ? 'grab' : 'default';
 
   useEffect(() => {
     const el = viewportRef.current;
