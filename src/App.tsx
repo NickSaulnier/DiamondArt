@@ -74,17 +74,6 @@ function App() {
     <div className="h-screen bg-white text-gray-900 flex flex-col overflow-hidden">
       <header className="border-b border-gray-200 px-6 py-4 flex justify-between items-center shrink-0">
         <span className="text-lg font-medium">Diamond Art</span>
-        <nav className="flex gap-8 text-sm">
-          <a href="#home" className="hover:underline">
-            Home
-          </a>
-          <a href="#about" className="hover:underline">
-            About
-          </a>
-          <a href="#instructions" className="hover:underline">
-            Instructions
-          </a>
-        </nav>
       </header>
 
       <main className="w-full flex-1 min-h-0 flex flex-col overflow-hidden pt-4 pb-4">
