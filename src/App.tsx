@@ -87,7 +87,7 @@ function App() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '280px 1fr' },
+            gridTemplateColumns: { xs: '1fr', md: '304px 1fr' },
             width: '100%',
             height: '100%',
             minHeight: 0,
@@ -102,8 +102,8 @@ function App() {
               px: 3,
               py: 2,
               borderRight: { md: '1px solid rgba(0,0,0,0.08)' },
-              width: { md: 280 },
-              maxWidth: { md: 280 },
+              width: { md: 304 },
+              maxWidth: { md: 304 },
               height: '100%',
               maxHeight: '100%',
               overflowY: 'auto',
