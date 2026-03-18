@@ -310,14 +310,14 @@ export function PreviewPanel({
           {viewOriginal ? 'Show dithered' : 'Show original'}
         </button>
       )}
-      {showDithered && !viewOriginal && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignSelf: 'flex-start' }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignSelf: 'flex-start' }}>
           <FormControlLabel
             control={
               <Checkbox
                 checked={showGridLines}
                 onChange={(_, checked) => setShowGridLines(checked)}
                 size="small"
+                disabled={!showDithered || viewOriginal}
               />
             }
             label="Show grid lines"
@@ -328,12 +328,12 @@ export function PreviewPanel({
                 checked={showNumberKeys}
                 onChange={(_, checked) => setShowNumberKeys(checked)}
                 size="small"
+                disabled={!showDithered || viewOriginal}
               />
             }
             label="Show number keys"
           />
-        </Box>
-      )}
+      </Box>
       <Box
         sx={{
           position: 'relative',
