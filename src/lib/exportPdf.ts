@@ -28,13 +28,22 @@ export async function exportPatternPdf({
   const page = pdfDoc.addPage();
   const { width: pageWidth, height: pageHeight } = page.getSize();
 
-  const gridHeight = beadRows * cellSize;
+  const availableWidth = pageWidth - 2 * margin;
+  const availableHeight = pageHeight - 2 * margin;
+  const maxCellSizeW = availableWidth / beadCols;
+  const maxCellSizeH = availableHeight / beadRows;
+  const cellSizeFitted = Math.max(
+    0.5,
+    Math.min(cellSize, maxCellSizeW, maxCellSizeH)
+  );
 
-  const startX = margin;
+  const gridWidth = beadCols * cellSizeFitted;
+  const gridHeight = beadRows * cellSizeFitted;
+  const startX = margin + (availableWidth - gridWidth) / 2;
   const startY = pageHeight - margin - gridHeight;
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontSize = Math.max(4, Math.min(8, cellSize * 0.4));
+  const fontSize = Math.max(4, Math.min(8, cellSizeFitted * 0.4));
 
   const idByDmcIndex = new Map<number, number>();
   colorEntries.forEach(({ id, dmcIndex }) => {
@@ -47,14 +56,14 @@ export async function exportPatternPdf({
       const dmcIndex = rowArr[col] ?? 0;
       const dmc = DMC_PALETTE[dmcIndex] ?? DMC_PALETTE[0];
       const [r, g, b] = dmc.rgb;
-      const x = startX + col * cellSize;
-      const y = startY + (beadRows - 1 - row) * cellSize;
+      const x = startX + col * cellSizeFitted;
+      const y = startY + (beadRows - 1 - row) * cellSizeFitted;
 
       page.drawRectangle({
         x,
         y,
-        width: cellSize,
-        height: cellSize,
+        width: cellSizeFitted,
+        height: cellSizeFitted,
         color: rgb(r / 255, g / 255, b / 255),
       });
 
@@ -63,8 +72,8 @@ export async function exportPatternPdf({
         const text = String(id);
         const textWidth = font.widthOfTextAtSize(text, fontSize);
         page.drawText(text, {
-          x: x + (cellSize - textWidth) / 2,
-          y: y + cellSize - fontSize * 0.9,
+          x: x + (cellSizeFitted - textWidth) / 2,
+          y: y + cellSizeFitted - fontSize * 0.9,
           size: fontSize,
           font,
           color: rgb(0, 0, 0),
