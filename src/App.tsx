@@ -51,6 +51,7 @@ function App() {
     isDithering,
     setSourceImage,
     runDither,
+    updateBeadCells,
     clearError,
     setError,
   } = useDither();
@@ -178,6 +179,7 @@ function App() {
               onToggleView={() => setViewOriginal((v) => !v)}
               isDithering={isDithering}
               previewViewRef={previewViewRef}
+              onUpdateBeadCells={updateBeadCells}
             />
           </Box>
         </Box>

@@ -374,11 +374,74 @@ export function useDither() {
     setState((prev) => ({ ...prev, error: message }));
   }, []);
 
+  const updateBeadCells = useCallback(
+    (updates: Array<{ row: number; col: number; dmcIndex: number }>) => {
+      if (updates.length === 0) return;
+      setState((prev) => {
+        if (!prev.beadGrid || prev.beadCols <= 0 || prev.beadRows <= 0 || prev.blockSizeUsed <= 0) {
+          return prev;
+        }
+        const grid = prev.beadGrid.map((row) => [...row]);
+        for (const u of updates) {
+          if (u.row >= 0 && u.row < prev.beadRows && u.col >= 0 && u.col < prev.beadCols) {
+            grid[u.row][u.col] = u.dmcIndex;
+          }
+        }
+        const usedDmcIndices = new Set<number>();
+        for (const row of grid) {
+          for (const idx of row) {
+            usedDmcIndices.add(idx);
+          }
+        }
+        const sortedIndices = Array.from(usedDmcIndices).sort((a, b) => a - b);
+        const colorEntries: ColorEntry[] = sortedIndices.map((dmcIndex, i) => ({
+          id: i + 1,
+          dmcIndex,
+          dmc: DMC_PALETTE[dmcIndex],
+        }));
+        const w = prev.beadCols * prev.blockSizeUsed;
+        const h = prev.beadRows * prev.blockSizeUsed;
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return { ...prev, beadGrid: grid, colorEntries };
+        for (let row = 0; row < prev.beadRows; row += 1) {
+          const rowArr = grid[row];
+          for (let col = 0; col < prev.beadCols; col += 1) {
+            const dmcIndex = rowArr[col] ?? 0;
+            const dmc = DMC_PALETTE[dmcIndex] ?? DMC_PALETTE[0];
+            const [r, g, b] = dmc.rgb;
+            ctx.fillStyle = `rgb(${r},${g},${b})`;
+            ctx.fillRect(
+              col * prev.blockSizeUsed,
+              row * prev.blockSizeUsed,
+              prev.blockSizeUsed,
+              prev.blockSizeUsed
+            );
+          }
+        }
+        const url = canvas.toDataURL('image/png');
+        return {
+          ...prev,
+          beadGrid: grid,
+          colorEntries,
+          ditheredCanvas: canvas,
+          ditheredUrl: url,
+          width: w,
+          height: h,
+        };
+      });
+    },
+    []
+  );
+
   return {
     ...state,
     setSourceImage,
     analyzePalette,
     runDither,
+    updateBeadCells,
     clearError,
     setError,
   };

@@ -4,6 +4,8 @@ import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
 import { DitheringOverlay } from './DitheringOverlay';
+import { CanvasToolbar } from './CanvasToolbar';
+import { BeadGridWebGL } from './BeadGridWebGL';
 import type { ColorEntry } from './ColorKey';
 
 const DISPLAY_CELL_SIZE_MIN = 4;
@@ -32,6 +34,7 @@ interface PreviewPanelProps {
   onToggleView: () => void;
   isDithering?: boolean;
   previewViewRef?: React.MutableRefObject<PreviewViewState | null>;
+  onUpdateBeadCells?: (updates: Array<{ row: number; col: number; dmcIndex: number }>) => void;
 }
 
 function clampPan(pan: number, viewportSize: number, contentSize: number): number {
@@ -56,12 +59,16 @@ export function PreviewPanel({
   onToggleView,
   isDithering = false,
   previewViewRef,
+  onUpdateBeadCells,
 }: PreviewPanelProps) {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [showGridLines, setShowGridLines] = useState(true);
   const [showNumberKeys, setShowNumberKeys] = useState(true);
+  const [isColoringMode, setIsColoringMode] = useState(false);
+  const [brushSizeCells, setBrushSizeCells] = useState(1);
+  const [selectedDmcIndex, setSelectedDmcIndex] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef<{ clientX: number; clientY: number; panX: number; panY: number } | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -170,7 +177,7 @@ export function PreviewPanel({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (!displayUrl || isDithering) return;
+      if (!displayUrl || isDithering || isColoringMode) return;
       e.preventDefault();
       setIsDragging(true);
       dragStartRef.current = {
@@ -180,7 +187,7 @@ export function PreviewPanel({
         panY: pan.y,
       };
     },
-    [displayUrl, isDithering, pan.x, pan.y]
+    [displayUrl, isDithering, isColoringMode, pan.x, pan.y]
   );
 
   const handleMouseMove = useCallback(
@@ -225,8 +232,8 @@ export function PreviewPanel({
     };
   }, [isDragging, clampPanToBounds]);
 
-  const canPan = displayUrl && (displayWidth > viewportSize.width || displayHeight > viewportSize.height);
-  const cursor = isDragging ? 'grabbing' : canPan ? 'grab' : 'default';
+  const canPan = displayUrl && !isColoringMode && (displayWidth > viewportSize.width || displayHeight > viewportSize.height);
+  const cursor = isColoringMode ? 'none' : isDragging ? 'grabbing' : canPan ? 'grab' : 'default';
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -307,10 +314,21 @@ export function PreviewPanel({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
         >
+          {showDithered && !viewOriginal && (
+            <CanvasToolbar
+              isColoringMode={isColoringMode}
+              onColoringModeChange={setIsColoringMode}
+              brushSizeCells={brushSizeCells}
+              onBrushSizeChange={setBrushSizeCells}
+              selectedDmcIndex={selectedDmcIndex}
+              onSelectedDmcIndexChange={setSelectedDmcIndex}
+              disabled={isDithering || !beadGrid}
+            />
+          )}
           {displayUrl ? (
             <Box
               component="span"
-              key={viewOriginal ? 'original' : 'dithered'}
+              key={viewOriginal ? 'original' : isColoringMode ? 'coloring' : 'dithered'}
               sx={{
                 position: 'absolute',
                 left: 0,
@@ -321,6 +339,7 @@ export function PreviewPanel({
                 height: displayHeight || 0,
               }}
             >
+              {/* Base image always visible so geometry matches preview/exports */}
               <img
                 ref={imgRef}
                 src={displayUrl}
@@ -336,6 +355,8 @@ export function PreviewPanel({
                 width={width}
                 height={height}
               />
+
+              {/* Numbers overlay */}
               {!viewOriginal && (
                 <canvas
                   ref={numbersCanvasRef}
@@ -349,6 +370,8 @@ export function PreviewPanel({
                   }}
                 />
               )}
+
+              {/* Grid overlay */}
               {showCellGrid && showGridLines && (
                 <Box
                   component="span"
@@ -363,6 +386,30 @@ export function PreviewPanel({
                     backgroundSize: `${beadCellSizeX}px ${beadCellSizeY}px`,
                   }}
                 />
+              )}
+
+              {/* Coloring overlay: transparent canvas handling pointer + cursor */}
+              {isColoringMode && beadGrid && beadCols > 0 && beadRows > 0 && onUpdateBeadCells && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    width: displayWidth || 0,
+                    height: displayHeight || 0,
+                  }}
+                >
+                  <BeadGridWebGL
+                    beadGrid={beadGrid}
+                    beadCols={beadCols}
+                    beadRows={beadRows}
+                    displayWidth={displayWidth || 0}
+                    displayHeight={displayHeight || 0}
+                    brushSizeCells={brushSizeCells}
+                    selectedDmcIndex={selectedDmcIndex}
+                    onPaint={onUpdateBeadCells}
+                  />
+                </Box>
               )}
             </Box>
           ) : (
