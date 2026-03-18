@@ -243,11 +243,60 @@ export function PreviewPanel({
         DISPLAY_CELL_SIZE_MIN,
         Math.min(DISPLAY_CELL_SIZE_MAX, displayCellSize + step)
       );
-      if (next !== displayCellSize) onDisplayCellSizeChange(next);
+      if (next === displayCellSize) return;
+
+      // Zoom-to-cursor when the cursor is over the image content.
+      // Keep the content point under the cursor fixed in viewport space.
+      const rect = el.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const contentX = mouseX - pan.x;
+      const contentY = mouseY - pan.y;
+      const isOverContent =
+        contentX >= 0 &&
+        contentY >= 0 &&
+        contentX <= displayWidth &&
+        contentY <= displayHeight;
+
+      onDisplayCellSizeChange(next);
+
+      if (isOverContent && displayWidth > 0 && displayHeight > 0) {
+        // Compute new display size for the current view.
+        const nextBaseScale =
+          blockSize > 0 && next > 0 ? next / blockSize : 1;
+        let nextDisplayWidth = width * nextBaseScale;
+        let nextDisplayHeight = height * nextBaseScale;
+        if (!viewOriginal && beadCols > 0 && beadRows > 0) {
+          nextDisplayWidth = beadCols * next;
+          nextDisplayHeight = beadRows * next;
+        }
+
+        const u = contentX / displayWidth;
+        const v = contentY / displayHeight;
+        const desiredPanX = mouseX - u * nextDisplayWidth;
+        const desiredPanY = mouseY - v * nextDisplayHeight;
+        setPan(clampPanToBounds(desiredPanX, desiredPanY));
+      }
     };
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => el.removeEventListener('wheel', handleWheel);
-  }, [displayUrl, isDithering, displayCellSize, onDisplayCellSizeChange]);
+  }, [
+    displayUrl,
+    isDithering,
+    displayCellSize,
+    onDisplayCellSizeChange,
+    pan.x,
+    pan.y,
+    displayWidth,
+    displayHeight,
+    clampPanToBounds,
+    width,
+    height,
+    blockSize,
+    viewOriginal,
+    beadCols,
+    beadRows,
+  ]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minHeight: 0 }}>
