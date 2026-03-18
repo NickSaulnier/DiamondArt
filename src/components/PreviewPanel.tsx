@@ -325,7 +325,9 @@ export function PreviewPanel({
           {displayUrl ? (
             <Box
               component="span"
-              key={viewOriginal ? 'original' : isColoringMode ? 'coloring' : 'dithered'}
+              // Keep key stable so number/grid overlays don't remount/clear
+              // when toggling coloring mode.
+              key={viewOriginal ? 'original' : 'dithered'}
               sx={{
                 position: 'absolute',
                 left: 0,
@@ -348,6 +350,8 @@ export function PreviewPanel({
                   height: displayHeight || undefined,
                   display: 'block',
                   pointerEvents: 'none',
+                  position: 'relative',
+                  zIndex: 0,
                 }}
                 width={width}
                 height={height}
@@ -364,6 +368,7 @@ export function PreviewPanel({
                     width: displayWidth || 0,
                     height: displayHeight || 0,
                     pointerEvents: 'none',
+                    zIndex: 30,
                   }}
                 />
               )}
@@ -379,6 +384,7 @@ export function PreviewPanel({
                     width: displayWidth || 0,
                     height: displayHeight || 0,
                     pointerEvents: 'none',
+                    zIndex: 20,
                     backgroundImage: `linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px)`,
                     backgroundSize: `${beadCellSizeX}px ${beadCellSizeY}px`,
                   }}
@@ -394,6 +400,7 @@ export function PreviewPanel({
                     top: 0,
                     width: displayWidth || 0,
                     height: displayHeight || 0,
+                    zIndex: 10,
                   }}
                 >
                   <BeadGridWebGL
