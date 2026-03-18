@@ -19,17 +19,19 @@ interface BeadGridWebGLProps {
 function getCellsInCircle(
   centerCol: number,
   centerRow: number,
-  radiusCells: number,
+  diameterCells: number,
   cols: number,
   rows: number
 ): Array<{ row: number; col: number }> {
-  // For brushSizeCells = 1 we want exactly the center bead only.
-  // For larger brushes, grow to an integer radius.
-  const r = radiusCells <= 1 ? 0 : Math.max(1, Math.floor(radiusCells));
+  // `brushSizeCells` is treated as a *diameter* in cells (matches the cursor size).
+  // Paint only cells whose *centers* fall inside the circular brush.
+  const radius = Math.max(0, diameterCells / 2);
+  const rCeil = Math.ceil(radius);
   const cells: Array<{ row: number; col: number }> = [];
-  for (let dy = -r; dy <= r; dy += 1) {
-    for (let dx = -r; dx <= r; dx += 1) {
-      if (dx * dx + dy * dy <= r * r) {
+  const r2 = radius * radius;
+  for (let dy = -rCeil; dy <= rCeil; dy += 1) {
+    for (let dx = -rCeil; dx <= rCeil; dx += 1) {
+      if (dx * dx + dy * dy <= r2) {
         const col = centerCol + dx;
         const row = centerRow + dy;
         if (col >= 0 && col < cols && row >= 0 && row < rows) {
