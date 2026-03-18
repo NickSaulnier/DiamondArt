@@ -153,11 +153,6 @@ export function PreviewPanel({
   }, []);
 
   useEffect(() => {
-    // Reset pan only when the displayed image changes, not when zoom/display cell size changes.
-    setPan({ x: 0, y: 0 });
-  }, [displayUrl]);
-
-  useEffect(() => {
     if (!previewViewRef || !ditheredUrl) return;
     previewViewRef.current = {
       viewportWidth: viewportSize.width,
