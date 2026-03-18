@@ -45,9 +45,6 @@ export function DownloadButton({ beadGrid, beadCols, beadRows, colorEntries, dis
 
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.fillRect(x, y, cellSize, cellSize);
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x + 0.5, y + 0.5, cellSize - 1, cellSize - 1);
 
         const id = idByDmcIndex.get(dmcIndex);
         if (id != null) {

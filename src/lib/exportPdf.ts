@@ -56,8 +56,6 @@ export async function exportPatternPdf({
         width: cellSize,
         height: cellSize,
         color: rgb(r / 255, g / 255, b / 255),
-        borderColor: rgb(0, 0, 0),
-        borderWidth: 0.25,
       });
 
       const id = idByDmcIndex.get(dmcIndex);
