@@ -83,21 +83,35 @@ export async function exportPatternPdf({
     color: rgb(0, 0, 0),
   });
 
-  const legendPage = pdfDoc.addPage();
   const legendMargin = 40;
-  const rowHeight = 16;
-  let legendY = legendPage.getSize().height - legendMargin;
+  const rowHeight = 14;
+  const bottomMargin = legendMargin;
+  let legendPage = pdfDoc.addPage();
+  let legendPageHeight = legendPage.getSize().height;
+  let legendY = legendPageHeight - legendMargin;
 
-  legendPage.drawText('Color Key', {
-    x: legendMargin,
-    y: legendY,
-    size: 12,
-    font,
-    color: rgb(0, 0, 0),
-  });
-  legendY -= rowHeight;
+  const drawLegendHeader = (page: typeof legendPage, isContinuation: boolean) => {
+    page.drawText(isContinuation ? 'Color Key (continued)' : 'Color Key', {
+      x: legendMargin,
+      y: legendY,
+      size: 12,
+      font,
+      color: rgb(0, 0, 0),
+    });
+    legendY -= rowHeight;
+  };
 
-  colorEntries.forEach(({ id, dmcIndex }) => {
+  drawLegendHeader(legendPage, false);
+
+  for (let i = 0; i < colorEntries.length; i += 1) {
+    if (legendY - rowHeight < bottomMargin) {
+      legendPage = pdfDoc.addPage();
+      legendPageHeight = legendPage.getSize().height;
+      legendY = legendPageHeight - legendMargin;
+      drawLegendHeader(legendPage, true);
+    }
+
+    const { id, dmcIndex } = colorEntries[i];
     const dmc = DMC_PALETTE[dmcIndex] ?? DMC_PALETTE[0];
     const [r, g, b] = dmc.rgb;
 
@@ -128,7 +142,7 @@ export async function exportPatternPdf({
     });
 
     legendY -= rowHeight;
-  });
+  }
 
   const pdfBytes = await pdfDoc.save();
   const blob = new Blob([pdfBytes as unknown as BlobPart], { type: 'application/pdf' });
