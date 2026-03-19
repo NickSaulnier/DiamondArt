@@ -5,7 +5,7 @@ import Slider from '@mui/material/Slider';
 import Tooltip from '@mui/material/Tooltip';
 import Popover from '@mui/material/Popover';
 import Typography from '@mui/material/Typography';
-import { Brush } from '@mui/icons-material';
+import { Brush, ZoomIn } from '@mui/icons-material';
 import { DMC_PALETTE } from '../lib/dmcPalette';
 
 interface CanvasToolbarProps {
@@ -15,6 +15,8 @@ interface CanvasToolbarProps {
   onBrushSizeChange: (size: number) => void;
   selectedDmcIndex: number;
   onSelectedDmcIndexChange: (index: number) => void;
+  showMagnifier: boolean;
+  onShowMagnifierChange: (active: boolean) => void;
   disabled?: boolean;
 }
 
@@ -28,6 +30,8 @@ export function CanvasToolbar({
   onBrushSizeChange,
   selectedDmcIndex,
   onSelectedDmcIndexChange,
+  showMagnifier,
+  onShowMagnifierChange,
   disabled = false,
 }: CanvasToolbarProps) {
   const [colorAnchor, setColorAnchor] = useState<HTMLElement | null>(null);
@@ -84,6 +88,17 @@ export function CanvasToolbar({
                 sx={{ height: 80 }}
               />
             </Box>
+          </Tooltip>
+          <Tooltip title="Magnifier" placement="left">
+            <IconButton
+              size="small"
+              onClick={() => onShowMagnifierChange(!showMagnifier)}
+              disabled={disabled}
+              color={showMagnifier ? 'primary' : 'default'}
+              aria-pressed={showMagnifier}
+            >
+              <ZoomIn fontSize="small" />
+            </IconButton>
           </Tooltip>
           <Tooltip title="Pick DMC color" placement="left">
             <Box

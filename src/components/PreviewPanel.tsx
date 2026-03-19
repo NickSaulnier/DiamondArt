@@ -67,6 +67,7 @@ export function PreviewPanel({
   const [showGridLines, setShowGridLines] = useState(true);
   const [showNumberKeys, setShowNumberKeys] = useState(true);
   const [isColoringMode, setIsColoringMode] = useState(false);
+  const [showMagnifier, setShowMagnifier] = useState(true);
   const [brushSizeCells, setBrushSizeCells] = useState(1);
   const [selectedDmcIndex, setSelectedDmcIndex] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -172,7 +173,10 @@ export function PreviewPanel({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (!displayUrl || isDithering || isColoringMode) return;
+      // In coloring mode, left-drag paints (handled by BeadGridWebGL).
+      // Allow right-drag to pan so dragging doesn't feel "broken".
+      if (!displayUrl || isDithering) return;
+      if (isColoringMode && e.button !== 2) return;
       e.preventDefault();
       setIsDragging(true);
       dragStartRef.current = {
@@ -355,6 +359,10 @@ export function PreviewPanel({
             cursor,
             userSelect: 'none',
           }}
+          onContextMenu={(e) => {
+            // Prevent context menu so right-drag panning stays smooth.
+            if (isColoringMode) e.preventDefault();
+          }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -368,6 +376,8 @@ export function PreviewPanel({
               onBrushSizeChange={setBrushSizeCells}
               selectedDmcIndex={selectedDmcIndex}
               onSelectedDmcIndexChange={setSelectedDmcIndex}
+              showMagnifier={showMagnifier}
+              onShowMagnifierChange={setShowMagnifier}
               disabled={isDithering || !beadGrid}
             />
           )}
@@ -449,7 +459,9 @@ export function PreviewPanel({
                     top: 0,
                     width: displayWidth || 0,
                     height: displayHeight || 0,
-                    zIndex: 10,
+                    // Put the brush overlay above the grid/number overlays so
+                    // the magnifier box is not obscured by them.
+                    zIndex: 60,
                   }}
                 >
                   <BeadGridWebGL
@@ -458,8 +470,10 @@ export function PreviewPanel({
                     beadRows={beadRows}
                     displayWidth={displayWidth || 0}
                     displayHeight={displayHeight || 0}
+                    displayUrl={displayUrl ?? ''}
                     brushSizeCells={brushSizeCells}
                     selectedDmcIndex={selectedDmcIndex}
+                    showMagnifier={showMagnifier}
                     onPaint={onUpdateBeadCells}
                   />
                 </Box>

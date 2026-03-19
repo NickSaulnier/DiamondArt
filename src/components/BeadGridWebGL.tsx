@@ -8,6 +8,8 @@ interface BeadGridWebGLProps {
   beadRows: number;
   displayWidth: number;
   displayHeight: number;
+  displayUrl: string;
+  showMagnifier: boolean;
   brushSizeCells: number;
   selectedDmcIndex: number;
   onPaint: (updates: Array<{ row: number; col: number; dmcIndex: number }>) => void;
@@ -49,6 +51,8 @@ export function BeadGridWebGL({
   beadRows,
   displayWidth,
   displayHeight,
+  displayUrl,
+  showMagnifier,
   brushSizeCells,
   selectedDmcIndex,
   onPaint,
@@ -59,6 +63,8 @@ export function BeadGridWebGL({
 
   const glRef = useRef<WebGLRenderingContext | null>(null);
   const cellSizeCssRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const magnifierCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const magnifierImgRef = useRef<HTMLImageElement | null>(null);
 
   const syncGridCopy = useCallback(() => {
     gridCopyRef.current = beadGrid.map((row) => [...row]);
@@ -212,6 +218,100 @@ export function BeadGridWebGL({
   // Visually match one bead cell per brush unit: diameter ≈ cell size.
   const cursorDiameter =
     baseCellCss > 0 ? Math.max(4, Math.round(brushSizeCells * baseCellCss)) : 0;
+  const magnifierSize = 140; // px
+  const magnifierZoom = 3;
+  const magnifierOffset = 10; // px from cursor
+
+  const drawMagnifier = useCallback(() => {
+    if (!showMagnifier || !cursorPos || !displayUrl) return;
+    const canvas = magnifierCanvasRef.current;
+    const img = magnifierImgRef.current;
+    if (!canvas || !img) return;
+    if (displayWidth <= 0 || displayHeight <= 0) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(1, Math.round(magnifierSize * dpr));
+    const h = Math.max(1, Math.round(magnifierSize * dpr));
+
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, w, h);
+
+    // Crop size in the same CSS-pixel coordinate space as cursorPos.
+    const cropCssW = magnifierSize / magnifierZoom;
+    const cropCssH = cropCssW;
+
+    const halfW = cropCssW / 2;
+    const halfH = cropCssH / 2;
+
+    let sxCss = cursorPos.x - halfW;
+    let syCss = cursorPos.y - halfH;
+
+    sxCss = Math.max(0, Math.min(displayWidth - cropCssW, sxCss));
+    syCss = Math.max(0, Math.min(displayHeight - cropCssH, syCss));
+
+    // Convert CSS displayed coordinates to the image's natural pixel coordinates.
+    const scaleX = img.naturalWidth / displayWidth;
+    const scaleY = img.naturalHeight / displayHeight;
+
+    const sx = sxCss * scaleX;
+    const sy = syCss * scaleY;
+    const sw = cropCssW * scaleX;
+    const sh = cropCssH * scaleY;
+
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+  }, [
+    showMagnifier,
+    cursorPos,
+    displayUrl,
+    displayWidth,
+    displayHeight,
+    magnifierSize,
+    magnifierZoom,
+  ]);
+
+  useEffect(() => {
+    if (!showMagnifier || !displayUrl) {
+      magnifierImgRef.current = null;
+      return;
+    }
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = displayUrl;
+    img.onload = () => {
+      magnifierImgRef.current = img;
+      drawMagnifier();
+    };
+    img.onerror = () => {
+      magnifierImgRef.current = null;
+    };
+  }, [showMagnifier, displayUrl, drawMagnifier]);
+
+  useEffect(() => {
+    drawMagnifier();
+  }, [cursorPos, drawMagnifier]);
+
+  const magnifierLeft = cursorPos
+    ? Math.min(
+        Math.max(0, cursorPos.x + magnifierOffset),
+        displayWidth - magnifierSize
+      )
+    : 0;
+  const magnifierTop = cursorPos
+    ? Math.min(
+        Math.max(0, cursorPos.y - magnifierSize - magnifierOffset),
+        displayHeight - magnifierSize
+      )
+    : 0;
+
+  // Magnifier crop is rendered via the canvas in `drawMagnifier`.
 
   return (
     <Box
@@ -260,6 +360,38 @@ export function BeadGridWebGL({
             boxShadow: '0 0 0 1px rgba(255,255,255,0.8)',
           }}
         />
+      )}
+
+      {cursorPos != null && displayUrl && showMagnifier && (
+        <Box
+          sx={{
+            position: 'absolute',
+            left: magnifierLeft,
+            top: magnifierTop,
+            width: magnifierSize,
+            height: magnifierSize,
+            borderRadius: 1,
+            border: '1px solid rgba(0,0,0,0.25)',
+            backgroundColor: 'rgba(255,255,255,0.9)',
+            overflow: 'hidden',
+            pointerEvents: 'none',
+            zIndex: 50,
+          }}
+        >
+          <canvas
+            ref={magnifierCanvasRef}
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: magnifierSize,
+              height: magnifierSize,
+              imageRendering: 'pixelated',
+              display: 'block',
+              pointerEvents: 'none',
+            }}
+          />
+        </Box>
       )}
     </Box>
   );
