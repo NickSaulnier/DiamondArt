@@ -1,12 +1,15 @@
 import Button from '@mui/material/Button';
 import type { ColorEntry } from './ColorKey';
 import { exportPatternPdf } from '../lib/exportPdf';
+import { blockSizeToBeadDiameterMm } from '../lib/beadSize';
 
 interface DownloadPdfButtonProps {
   beadGrid: number[][] | null;
   beadCols: number;
   beadRows: number;
   colorEntries: ColorEntry[];
+  /** Pixelation block size from the last dither (4 / 5 / 6); maps to bead diameter in mm. */
+  blockSize: number;
   disabled?: boolean;
 }
 
@@ -15,6 +18,7 @@ export function DownloadPdfButton({
   beadCols,
   beadRows,
   colorEntries,
+  blockSize,
   disabled,
 }: DownloadPdfButtonProps) {
   const handleDownloadPdf = async () => {
@@ -25,7 +29,7 @@ export function DownloadPdfButton({
       beadRows,
       colorEntries,
       title: 'Dithered Bead Pattern',
-      cellSize: 8,
+      beadDiameterMm: blockSizeToBeadDiameterMm(blockSize),
       margin: 36,
     });
   };

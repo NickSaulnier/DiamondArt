@@ -9,6 +9,7 @@ import Select from '@mui/material/Select';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import type { RgbQuantOptions, DitherKernel, DitherMode } from '../lib/dithering';
+import { BEAD_SIZE_OPTIONS } from '../lib/beadSize';
 
 const KERNELS: DitherKernel[] = [
   'FloydSteinberg',
@@ -37,12 +38,6 @@ interface DitherControlsProps {
   isAnalyzing: boolean;
   isDithering: boolean;
 }
-
-const BEAD_SIZE_OPTIONS: { label: string; blockSize: number }[] = [
-  { label: '2.5 mm', blockSize: 4 },
-  { label: '2.8 mm', blockSize: 5 },
-  { label: '3.0 mm', blockSize: 6 },
-];
 
 export function DitherControls({
   options,

@@ -1,5 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { DMC_PALETTE } from './dmcPalette';
+import { mmToPdfPoints } from './beadSize';
 
 export interface ExportPdfOptions {
   beadGrid: number[][];
@@ -7,7 +8,8 @@ export interface ExportPdfOptions {
   beadRows: number;
   colorEntries: Array<{ id: number; dmcIndex: number }>;
   title?: string;
-  cellSize?: number;
+  /** Physical size of one bead cell on paper when not scaled down to fit the page (millimeters). */
+  beadDiameterMm: number;
   margin?: number;
 }
 
@@ -17,7 +19,7 @@ export async function exportPatternPdf({
   beadRows,
   colorEntries,
   title = 'Dithered Pattern',
-  cellSize = 10,
+  beadDiameterMm,
   margin = 36,
 }: ExportPdfOptions): Promise<void> {
   if (!beadGrid || beadCols <= 0 || beadRows <= 0 || colorEntries.length === 0) {
@@ -32,10 +34,13 @@ export async function exportPatternPdf({
   const availableHeight = pageHeight - 2 * margin;
   const maxCellSizeW = availableWidth / beadCols;
   const maxCellSizeH = availableHeight / beadRows;
+  const desiredCellPt = mmToPdfPoints(beadDiameterMm);
   const cellSizeFitted = Math.max(
     0.5,
-    Math.min(cellSize, maxCellSizeW, maxCellSizeH)
+    Math.min(desiredCellPt, maxCellSizeW, maxCellSizeH)
   );
+  const scaledDown = cellSizeFitted < desiredCellPt - 0.02;
+  const actualCellMm = (cellSizeFitted / 72) * 25.4;
 
   const gridWidth = beadCols * cellSizeFitted;
   const gridHeight = beadRows * cellSizeFitted;
@@ -90,6 +95,19 @@ export async function exportPatternPdf({
     size: titleFontSize,
     font,
     color: rgb(0, 0, 0),
+  });
+
+  const subtitle = scaledDown
+    ? `Printed cell size: ${actualCellMm.toFixed(2)} mm (scaled to fit page; bead size ${beadDiameterMm} mm)`
+    : `Printed cell size: ${beadDiameterMm} mm per bead (1:1 scale)`;
+  const subtitleFontSize = 9;
+  const subtitleWidth = font.widthOfTextAtSize(subtitle, subtitleFontSize);
+  page.drawText(subtitle, {
+    x: (pageWidth - subtitleWidth) / 2,
+    y: margin - 4,
+    size: subtitleFontSize,
+    font,
+    color: rgb(0.25, 0.25, 0.25),
   });
 
   const legendMargin = 40;

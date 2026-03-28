@@ -1,5 +1,6 @@
 import Button from '@mui/material/Button';
 import { DMC_PALETTE } from '../lib/dmcPalette';
+import { blockSizeToBeadDiameterMm, mmToPixelsAtDpi, PRINT_EXPORT_DPI } from '../lib/beadSize';
 import type { ColorEntry } from './ColorKey';
 
 interface DownloadButtonProps {
@@ -7,14 +8,24 @@ interface DownloadButtonProps {
   beadCols: number;
   beadRows: number;
   colorEntries: ColorEntry[];
+  /** Pixelation block size from the last dither (4 / 5 / 6); maps to bead diameter in mm for print resolution. */
+  blockSize: number;
   disabled?: boolean;
 }
 
-export function DownloadButton({ beadGrid, beadCols, beadRows, colorEntries, disabled }: DownloadButtonProps) {
+export function DownloadButton({
+  beadGrid,
+  beadCols,
+  beadRows,
+  colorEntries,
+  blockSize,
+  disabled,
+}: DownloadButtonProps) {
   const handleDownload = () => {
     if (!beadGrid || beadCols <= 0 || beadRows <= 0 || colorEntries.length === 0) return;
 
-    const cellSize = 24; // export cell size in pixels
+    const beadMm = blockSizeToBeadDiameterMm(blockSize);
+    const cellSize = Math.max(1, Math.round(mmToPixelsAtDpi(beadMm, PRINT_EXPORT_DPI)));
     const exportW = beadCols * cellSize;
     const exportH = beadRows * cellSize;
 
@@ -29,7 +40,7 @@ export function DownloadButton({ beadGrid, beadCols, beadRows, colorEntries, dis
       idByDmcIndex.set(dmcIndex, id);
     });
 
-    const fontSize = Math.max(6, Math.min(10, cellSize * 0.4));
+    const fontSize = Math.max(3, Math.min(12, cellSize * 0.4));
     ctx.font = `${fontSize}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';

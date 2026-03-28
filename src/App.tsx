@@ -137,12 +137,14 @@ function App() {
                 beadCols={beadCols}
                 beadRows={beadRows}
                 colorEntries={colorEntries}
+                blockSize={blockSizeUsed || blockSize}
               />
               <DownloadPdfButton
                 beadGrid={beadGrid}
                 beadCols={beadCols}
                 beadRows={beadRows}
                 colorEntries={colorEntries}
+                blockSize={blockSizeUsed || blockSize}
               />
             </Box>
           </Box>
