@@ -30,6 +30,8 @@ const defaultOptions: RgbQuantOptions = {
 function App() {
   const [mode, setMode] = useState<DitherMode>('Error Diffusion');
   const [blockSize, setBlockSize] = useState(5);
+  /** Max width (px) of the image before dithering; lower = fewer beads, better for print. */
+  const [patternMaxWidthPx, setPatternMaxWidthPx] = useState(640);
   const [displayCellSize, setDisplayCellSize] = useState(6);
   const [options, setOptions] = useState<RgbQuantOptions>(defaultOptions);
   const [viewOriginal, setViewOriginal] = useState(false);
@@ -64,8 +66,8 @@ function App() {
   );
 
   const handleDither = useCallback(() => {
-    runDither(options, mode, blockSize);
-  }, [runDither, options, mode, blockSize]);
+    runDither(options, mode, blockSize, patternMaxWidthPx);
+  }, [runDither, options, mode, blockSize, patternMaxWidthPx]);
 
   useEffect(() => {
     if (ditheredUrl) setViewOriginal(false);
@@ -119,11 +121,14 @@ function App() {
               options={options}
               mode={mode}
               blockSize={blockSize}
+              patternMaxWidthPx={patternMaxWidthPx}
+              sourceNaturalWidth={sourceImage?.naturalWidth ?? 0}
               displayCellSize={displayCellSize}
               usedColorCount={colorEntries.length}
               onOptionsChange={setOptions}
               onModeChange={setMode}
               onBlockSizeChange={setBlockSize}
+              onPatternMaxWidthPxChange={setPatternMaxWidthPx}
               onDisplayCellSizeChange={setDisplayCellSize}
               onDither={handleDither}
               hasImage={!!sourceImage}

@@ -29,3 +29,14 @@ export function mmToPixelsAtDpi(mm: number, dpi: number): number {
 
 /** PNG exports use this DPI so printed size matches bead labels when printed at 100% / native resolution. */
 export const PRINT_EXPORT_DPI = 300;
+
+/**
+ * Extra scale on export for print (PDF/PNG). 1.0 = exact labeled bead diameter; slightly above 1
+ * compensates for typical printer/viewers. Increase if cells print small; decrease if too large.
+ */
+export const PRINT_CELL_SIZE_MULTIPLIER = 1.15;
+
+/** Effective cell diameter (mm) used for PDF/PNG export. */
+export function exportCellDiameterMm(beadDiameterMm: number): number {
+  return beadDiameterMm * PRINT_CELL_SIZE_MULTIPLIER;
+}

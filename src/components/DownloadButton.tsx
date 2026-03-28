@@ -1,6 +1,11 @@
 import Button from '@mui/material/Button';
 import { DMC_PALETTE } from '../lib/dmcPalette';
-import { blockSizeToBeadDiameterMm, mmToPixelsAtDpi, PRINT_EXPORT_DPI } from '../lib/beadSize';
+import {
+  blockSizeToBeadDiameterMm,
+  exportCellDiameterMm,
+  mmToPixelsAtDpi,
+  PRINT_EXPORT_DPI,
+} from '../lib/beadSize';
 import type { ColorEntry } from './ColorKey';
 
 interface DownloadButtonProps {
@@ -25,7 +30,8 @@ export function DownloadButton({
     if (!beadGrid || beadCols <= 0 || beadRows <= 0 || colorEntries.length === 0) return;
 
     const beadMm = blockSizeToBeadDiameterMm(blockSize);
-    const cellSize = Math.max(1, Math.round(mmToPixelsAtDpi(beadMm, PRINT_EXPORT_DPI)));
+    const cellMm = exportCellDiameterMm(beadMm);
+    const cellSize = Math.max(1, Math.ceil(mmToPixelsAtDpi(cellMm, PRINT_EXPORT_DPI)));
     const exportW = beadCols * cellSize;
     const exportH = beadRows * cellSize;
 
@@ -40,7 +46,7 @@ export function DownloadButton({
       idByDmcIndex.set(dmcIndex, id);
     });
 
-    const fontSize = Math.max(3, Math.min(12, cellSize * 0.4));
+    const fontSize = Math.max(10, Math.min(22, cellSize * 0.45));
     ctx.font = `${fontSize}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';

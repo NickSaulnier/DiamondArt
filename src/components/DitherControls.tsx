@@ -27,11 +27,16 @@ interface DitherControlsProps {
   options: RgbQuantOptions;
   mode: DitherMode;
   blockSize: number;
+  /** Max width (px) of the working image before dithering; lower = fewer beads. */
+  patternMaxWidthPx: number;
+  /** Natural width of the loaded image (for bead estimates). */
+  sourceNaturalWidth?: number;
   displayCellSize: number;
   usedColorCount?: number;
   onOptionsChange: (options: RgbQuantOptions) => void;
   onModeChange: (mode: DitherMode) => void;
   onBlockSizeChange: (value: number) => void;
+  onPatternMaxWidthPxChange: (value: number) => void;
   onDisplayCellSizeChange: (value: number) => void;
   onDither: () => void;
   hasImage: boolean;
@@ -43,16 +48,24 @@ export function DitherControls({
   options,
   mode,
   blockSize,
+  patternMaxWidthPx,
+  sourceNaturalWidth = 0,
   displayCellSize,
   usedColorCount,
   onOptionsChange,
   onModeChange,
   onBlockSizeChange,
+  onPatternMaxWidthPxChange,
   onDisplayCellSizeChange,
   onDither,
   hasImage,
   isDithering,
 }: DitherControlsProps) {
+  const effectiveWidth =
+    sourceNaturalWidth > 0 ? Math.min(sourceNaturalWidth, patternMaxWidthPx) : patternMaxWidthPx;
+  const approxBeadCols =
+    blockSize > 0 && effectiveWidth > 0 ? Math.floor(effectiveWidth / blockSize) : null;
+
   return (
     <Box className="space-y-6" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Box>
@@ -136,6 +149,34 @@ export function DitherControls({
             ))}
           </Select>
         </FormControl>
+      </Box>
+
+      <Box>
+        <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+          Pattern width (pixels)
+        </Typography>
+        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+          Caps how wide the image is before dithering (always measured from your original photo).
+          Lower values mean fewer beads.           If the photo is already narrower than this cap, increasing it
+          won&apos;t add detail until the cap exceeds the photo width. Raise toward 4000 for
+          maximum detail on large images.
+        </Typography>
+        <Slider
+          value={patternMaxWidthPx}
+          onChange={(_, value) =>
+            onPatternMaxWidthPxChange(Array.isArray(value) ? value[0] : value)
+          }
+          min={200}
+          max={4000}
+          step={50}
+          valueLabelDisplay="auto"
+          disabled={!hasImage}
+        />
+        {approxBeadCols != null && (
+          <Typography variant="caption" color="text.secondary">
+            About {approxBeadCols} beads wide (height scales proportionally)
+          </Typography>
+        )}
       </Box>
 
       <Box>

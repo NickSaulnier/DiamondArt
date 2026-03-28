@@ -126,12 +126,20 @@ export function useDither() {
 
   const runDither = useCallback(
     (options: RgbQuantOptions, mode: DitherMode, blockSize: number, maxWidth?: number) => {
-      const { sourceImage, width: naturalWidth, height: naturalHeight } =
-        state;
+      const { sourceImage } = state;
       if (!sourceImage) {
         setState((prev) => ({ ...prev, error: 'No image loaded' }));
         return;
       }
+      // Always scale from the original image dimensions. Do not use state.width/height — those are
+      // overwritten with the last dithered export size, which would ignore pattern width changes.
+      const srcW = sourceImage.naturalWidth;
+      const srcH = sourceImage.naturalHeight;
+      if (srcW <= 0 || srcH <= 0) {
+        setState((prev) => ({ ...prev, error: 'Image has invalid dimensions' }));
+        return;
+      }
+
       setState((prev) => ({ ...prev, isDithering: true, error: null }));
       runDitherAbortedRef.current = false;
       if (revokeRef.current) {
@@ -139,11 +147,11 @@ export function useDither() {
         revokeRef.current = null;
       }
 
-      let w = naturalWidth;
-      let h = naturalHeight;
-      if (maxWidth != null && maxWidth > 0 && naturalWidth > maxWidth) {
+      let w = srcW;
+      let h = srcH;
+      if (maxWidth != null && maxWidth > 0 && srcW > maxWidth) {
         w = maxWidth;
-        h = Math.round((naturalHeight / naturalWidth) * maxWidth);
+        h = Math.round((srcH / srcW) * maxWidth);
       }
 
       const applyWorkerResult = (payload: DitherResult) => {
